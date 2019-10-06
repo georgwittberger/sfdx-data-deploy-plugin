@@ -1,0 +1,14 @@
+{
+  "jobs": [
+    {
+      "sObjectName": "Account",
+      "externalIdField": "AccountId__c",
+      "csvFile": "Account.csv"
+    },
+    {
+      "sObjectName": "Contact",
+      "externalIdField": "ContactId__c",
+      "csvFile": "Contact.csv"
+    }
+  ]
+}

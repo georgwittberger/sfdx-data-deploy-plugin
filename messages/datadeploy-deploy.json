@@ -1,0 +1,11 @@
+{
+  "commandDescription": "deploy data from CSV files to a Salesforce org",
+  "deploydirFlagDescription": "directory containing the deployment descriptor 'datadeploy.json'",
+  "waitperobjectFlagDescription": "the number of minutes to wait for each bulk API job",
+  "infoDeployDir": "Deploying data from directory: %s",
+  "infoDeployFile": "Using deployment descriptor: %s",
+  "infoDeployDataFromFile": "Deploying data for sObject '%s' from file '%s'",
+  "infoDeployCompleted": "Deployment from directory '%s' completed.",
+  "errorDeployFileNotReadable": "Deployment descriptor '%s' is not readable.",
+  "errorDeployDataFailed": "Data for sObject '%s' could not be deployed. Error: %s"
+}
