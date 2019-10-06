@@ -110,9 +110,8 @@ USAGE
   trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
 
 OPTIONS
-  -d, --deploydir=deploydir                                                         [default:
-                                                                                    D:\georg\Projects\sfdx-data-deploy-p
-                                                                                    lugin] directory containing the
+  -d, --deploydir=deploydir                                                         [default: working directory]
+                                                                                    directory containing the
                                                                                     deployment descriptor
                                                                                     'datadeploy.json'
 
