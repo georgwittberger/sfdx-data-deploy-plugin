@@ -49,7 +49,7 @@ The plugin initiates bulk API `upsert` jobs for a set of CSV files. The job conf
 
 1. Create a directory to store the files related to the deployment (e.g. `testdata`).
 2. Create the deployment descriptor file `datadeploy.json` in the deployment directory. See the format description below.
-3. Create the CSV files containing the data to deploy and put them in the deployment directory. One file belongs to a certain sObject. There can be multiple files for the same sObject. You can generate CSV files using a SOQL query with Salesforce CLI:
+3. Create the CSV files containing the data to deploy and put them in the deployment directory. One file belongs to a certain sObject. There can be multiple files for the same sObject. See the format description below. You can generate CSV files using a SOQL query with Salesforce CLI:
 
    ```bash
    sfdx force:data:soql:query -r csv -q "SELECT Name,... FROM Account WHERE ..." > testdata/Account.csv
@@ -64,7 +64,7 @@ The plugin initiates bulk API `upsert` jobs for a set of CSV files. The job conf
 
 ### Deployment Descriptor Format
 
-Example of a `datadeploy.json` file in the deployment directory:
+The deployment descriptor file `datadeploy.json` must have the following format:
 
 ```json
 {
@@ -83,7 +83,7 @@ Example of a `datadeploy.json` file in the deployment directory:
 }
 ```
 
-The `jobs` array defines the bulk API jobs to perform. These jobs are processed in the order as they appear in the array, so jobs for dependent objects should come last.
+The `jobs` array defines the bulk API jobs to perform. These jobs are processed in the order as they appear in the array one after another, so jobs for dependent objects should come last.
 
 **Job configuration properties:**
 
@@ -93,12 +93,37 @@ The `jobs` array defines the bulk API jobs to perform. These jobs are processed 
 | `externalIdField` | Name of the field used to match existing records  | `AccountId__c`                   |
 | `csvFile`         | Relative path to the CSV file containing the data | `Account.csv`                    |
 
+### CSV File Format
+
+The CSV files containing the data to deploy must have the same format as it is used for Salesforce bulk API operations. The file must have a header row defining the fields to import for each record. Since the plugin creates bulk API `upsert` jobs the external Id field of the sObject must be present as a column in the CSV file.
+
+Example for Account (with external Id field):
+
+```csv
+AccountId__c,Name
+b7845971-2677-43e0-9316-4909060da942,Demo Company 1
+01898b4a-555b-4010-ab1c-e6e9aeb3f20e,Demo Company 2
+5ff32eec-8b2e-4ff7-8eef-077a9a79c13d,Demo Company 3
+```
+
+Example for Contact (with relationship to Account using external Id):
+
+```csv
+ContactId__c,FirstName,LastName,Email,Account.AccountId__c
+fead3f99-1469-46fa-b6c0-4a8ce6e45736,Georg,Wittberger,georg.wittberger@gmail.com,b7845971-2677-43e0-9316-4909060da942
+```
+
+TIP: Relationships to other custom sObjects via external Id field can be expressed like this: `otherObject__r.otherObjectExtId__c`
+
+### Deployment Example
+
 See the subdirectory `data` in this Git repository for an example of a deployment directory.
 
 ## Commands
 
 <!-- commands -->
-* [`sfdx datadeploy:deploy [-d <directory>] [-w <minutes>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-datadeploydeploy--d-directory--w-minutes--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
+
+- [`sfdx datadeploy:deploy [-d <directory>] [-w <minutes>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-datadeploydeploy--d-directory--w-minutes--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 
 ## `sfdx datadeploy:deploy [-d <directory>] [-w <minutes>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
@@ -106,7 +131,7 @@ deploy data from CSV files to a Salesforce org
 
 ```
 USAGE
-  $ sfdx datadeploy:deploy [-d <directory>] [-w <minutes>] [-u <string>] [--apiversion <string>] [--json] [--loglevel 
+  $ sfdx datadeploy:deploy [-d <directory>] [-w <minutes>] [-u <string>] [--apiversion <string>] [--json] [--loglevel
   trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
 
 OPTIONS
@@ -135,6 +160,7 @@ EXAMPLE
 ```
 
 _See code: [lib\commands\datadeploy\deploy.js](https://github.com/georgwittberger/sfdx-data-deploy-plugin/blob/v1.0.0/lib\commands\datadeploy\deploy.js)_
+
 <!-- commandsstop -->
 
 ## License
