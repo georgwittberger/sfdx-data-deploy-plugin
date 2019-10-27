@@ -1,6 +1,5 @@
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages, SfdxError } from '@salesforce/core';
-import { Duration } from '@salesforce/kit';
 import { AnyJson } from '@salesforce/ts-types';
 import { readJsonSync } from 'fs-extra';
 import * as path from 'path';
@@ -25,13 +24,11 @@ export default class DataDeployDeploy extends SfdxCommand {
   protected static flagsConfig = {
     deploydir: flags.directory({
       char: 'd',
-      description: messages.getMessage('deploydirFlagDescription'),
-      default: process.cwd()
+      description: messages.getMessage('deploydirFlagDescription')
     }),
     waitperobject: flags.minutes({
       char: 'w',
-      description: messages.getMessage('waitperobjectFlagDescription'),
-      default: Duration.minutes(5)
+      description: messages.getMessage('waitperobjectFlagDescription')
     })
   };
 
@@ -39,9 +36,7 @@ export default class DataDeployDeploy extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<AnyJson> {
-    const deployDir = path.isAbsolute(this.flags.deploydir)
-      ? this.flags.deploydir
-      : path.resolve(process.cwd(), this.flags.deploydir);
+    const deployDir = this.getDeployDir();
     this.log(messages.getMessage('infoDeployDir', [deployDir]));
 
     const deployFile = path.resolve(deployDir, 'datadeploy.json');
@@ -56,27 +51,29 @@ export default class DataDeployDeploy extends SfdxCommand {
       );
     }
 
-    for (const sObject of deployConfig.jobs) {
-      const csvFile = path.resolve(deployDir, sObject.csvFile);
+    for (const job of deployConfig.jobs) {
+      const csvFile = path.resolve(deployDir, job.csvFile);
+      const waitTimeout = this.getJobWaitTimeout(job);
       this.log(
         messages.getMessage('infoDeployDataFromFile', [
-          sObject.sObjectName,
-          csvFile
+          job.sObjectName,
+          csvFile,
+          waitTimeout
         ])
       );
 
       try {
         await DataBulkUpsertCommand.run([
           `--targetusername=${this.org.getUsername()}`,
-          `--sobjecttype=${sObject.sObjectName}`,
-          `--externalid=${sObject.externalIdField}`,
+          `--sobjecttype=${job.sObjectName}`,
+          `--externalid=${job.externalIdField}`,
           `--csvfile=${csvFile}`,
-          `--wait=${this.flags.waitperobject.minutes}`
+          `--wait=${waitTimeout}`
         ]);
       } catch (error) {
         throw new SfdxError(
           messages.getMessage('errorDeployDataFailed', [
-            sObject.sObjectName,
+            job.sObjectName,
             error.description
           ])
         );
@@ -86,6 +83,16 @@ export default class DataDeployDeploy extends SfdxCommand {
     this.log(messages.getMessage('infoDeployCompleted', [deployDir]));
     return {};
   }
+
+  private getDeployDir(): string {
+    return this.flags.deploydir && path.isAbsolute(this.flags.deploydir)
+      ? this.flags.deploydir
+      : path.resolve(process.cwd(), this.flags.deploydir || '');
+  }
+
+  private getJobWaitTimeout(jobConfig: JobConfig): number {
+    return this.flags.waitperobject ? this.flags.waitperobject.minutes : 5;
+  }
 }
 
 /**
@@ -93,20 +100,25 @@ export default class DataDeployDeploy extends SfdxCommand {
  */
 interface DeployConfig {
   /**
-   * Array of bulk load job configurations
+   * Array of Bulk API job configurations
    */
-  jobs: Array<{
-    /**
-     * Name of the Salesforce object
-     */
-    sObjectName: string;
-    /**
-     * Name of the field used to match existing records
-     */
-    externalIdField: string;
-    /**
-     * Relative path to the CSV file containing the data
-     */
-    csvFile: string;
-  }>;
+  jobs: JobConfig[];
+}
+
+/**
+ * Bulk API job configuration
+ */
+interface JobConfig {
+  /**
+   * Name of the Salesforce object
+   */
+  sObjectName: string;
+  /**
+   * Name of the field used to match existing records
+   */
+  externalIdField: string;
+  /**
+   * Relative path to the CSV file containing the data
+   */
+  csvFile: string;
 }

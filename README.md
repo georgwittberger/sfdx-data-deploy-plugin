@@ -135,17 +135,15 @@ USAGE
   trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
 
 OPTIONS
-  -d, --deploydir=deploydir                                                         [default: working directory]
-                                                                                    directory containing the
-                                                                                    deployment descriptor
-                                                                                    'datadeploy.json'
+  -d, --deploydir=deploydir                                                         directory containing the deployment
+                                                                                    descriptor 'datadeploy.json'
+                                                                                    (default: current working directory)
 
   -u, --targetusername=targetusername                                               username or alias for the target
                                                                                     org; overrides default target org
 
-  -w, --waitperobject=waitperobject                                                 [default: 5 minutes] the number of
-                                                                                    minutes to wait for each bulk API
-                                                                                    job
+  -w, --waitperobject=waitperobject                                                 number of minutes to wait for each
+                                                                                    bulk API job (default: 5 minutes)
 
   --apiversion=apiversion                                                           override the api version used for
                                                                                     api requests made by this command
@@ -159,7 +157,7 @@ EXAMPLE
   $ sfdx datadeploy:deploy --deploydir ./testdata --targetusername myOrg@example.com
 ```
 
-_See code: [lib\commands\datadeploy\deploy.js](https://github.com/georgwittberger/sfdx-data-deploy-plugin/blob/v1.0.0/lib\commands\datadeploy\deploy.js)_
+_See code: [lib\commands\datadeploy\deploy.js](https://github.com/georgwittberger/sfdx-data-deploy-plugin/blob/v1.0.1/lib\commands\datadeploy\deploy.js)_
 
 <!-- commandsstop -->
 
