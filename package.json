@@ -1,7 +1,7 @@
 {
   "name": "sfdx-data-deploy-plugin",
   "description": "SFDX plugin to deploy data from CSV files to a Salesforce org",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "license": "MIT",
   "author": "Georg Wittberger <georg.wittberger@gmail.com>",
   "homepage": "https://github.com/georgwittberger/sfdx-data-deploy-plugin",
