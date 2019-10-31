@@ -6,6 +6,13 @@
       "deployConfig": {
         "externalIdFieldApiName": "AccountId__c",
         "maxWaitMinutes": 2
+      },
+      "retrieveConfig": {
+        "fieldApiNames": ["AccountId__c", "Name"],
+        "filterCriteria": {
+          "Name": { "$like": "Demo %" }
+        },
+        "sortFieldNames": ["Name"]
       }
     },
     {
@@ -14,6 +21,13 @@
       "deployConfig": {
         "externalIdFieldApiName": "ContactId__c",
         "maxWaitMinutes": 3
+      },
+      "retrieveConfig": {
+        "fieldApiNames": ["ContactId__c", "FirstName", "LastName", "Email", "Account.AccountId__c"],
+        "filterCriteria": {
+          "LastName": "Wittberger"
+        },
+        "sortFieldNames": ["LastName"]
       }
     }
   ]

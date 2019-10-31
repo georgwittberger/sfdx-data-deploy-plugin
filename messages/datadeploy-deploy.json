@@ -1,7 +1,6 @@
 {
-  "commandDescription": "deploy data from CSV files to a Salesforce org",
+  "commandDescription": "deploy data from data files to Salesforce",
   "deploydirFlagDescription": "directory containing the deployment descriptor 'datadeploy.json' (default: current working directory)",
-  "waitperobjectFlagDescription": "number of minutes to wait for each bulk API job (default: 5 minutes)",
   "infoDeploymentDirectory": "Deploying data from directory: %s",
   "infoDeploymentFile": "Using deployment descriptor: %s",
   "infoDeployingRecordsFromFile": "Deploying %s records for sObject '%s' from file '%s' waiting at most %s minutes",
