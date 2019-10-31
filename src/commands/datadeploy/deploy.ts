@@ -1,124 +1,139 @@
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages, SfdxError } from '@salesforce/core';
-import { AnyJson } from '@salesforce/ts-types';
+import * as fs from 'fs';
 import { readJsonSync } from 'fs-extra';
+import { BatchInfo, ErrorResult, Job, RecordResult } from 'jsforce';
 import * as path from 'path';
-import { DataBulkUpsertCommand } from 'salesforce-alm/dist/commands/force/data/bulk/upsert';
+import { DeploymentConfig } from '../../config/deployment-config';
 
 Messages.importMessagesDirectory(__dirname);
-const messages = Messages.loadMessages(
-  'sfdx-data-deploy-plugin',
-  'datadeploy-deploy'
-);
+const messages = Messages.loadMessages('sfdx-data-deploy-plugin', 'datadeploy-deploy');
 
 /**
- * Command to deploy data from CSV files to a Salesforce org
+ * Command to deploy data to Salesforce
  */
 export default class DataDeployDeploy extends SfdxCommand {
   public static description = messages.getMessage('commandDescription');
 
-  public static examples = [
-    '$ sfdx datadeploy:deploy --deploydir ./testdata --targetusername myOrg@example.com'
-  ];
+  public static examples = ['$ sfdx datadeploy:deploy --deploydir ./testdata --targetusername myOrg@example.com'];
 
   protected static flagsConfig = {
     deploydir: flags.directory({
       char: 'd',
       description: messages.getMessage('deploydirFlagDescription')
-    }),
-    waitperobject: flags.minutes({
-      char: 'w',
-      description: messages.getMessage('waitperobjectFlagDescription')
     })
   };
 
   protected static requiresUsername = true;
   protected static requiresProject = false;
 
-  public async run(): Promise<AnyJson> {
-    const deployDir = this.getDeployDir();
-    this.log(messages.getMessage('infoDeployDir', [deployDir]));
+  public async run(): Promise<DeploymentResult> {
+    const deploymentDirectory = this.getDeploymentDirectory();
+    this.log(messages.getMessage('infoDeploymentDirectory', [deploymentDirectory]));
 
-    const deployFile = path.resolve(deployDir, 'datadeploy.json');
-    this.log(messages.getMessage('infoDeployFile', [deployFile]));
+    const deploymentFile = path.resolve(deploymentDirectory, 'datadeploy.json');
+    this.log(messages.getMessage('infoDeploymentFile', [deploymentFile]));
 
-    let deployConfig: DeployConfig;
+    let deploymentConfig: DeploymentConfig;
     try {
-      deployConfig = readJsonSync(deployFile) as DeployConfig;
+      deploymentConfig = readJsonSync(deploymentFile) as DeploymentConfig;
     } catch (error) {
-      throw new SfdxError(
-        messages.getMessage('errorDeployFileNotReadable', [deployFile])
-      );
+      throw new SfdxError(messages.getMessage('errorDeploymentFileNotReadable', [deploymentFile]));
     }
 
-    for (const job of deployConfig.jobs) {
-      const csvFile = path.resolve(deployDir, job.csvFile);
-      const waitTimeout = this.getJobWaitTimeout(job);
-      this.log(
-        messages.getMessage('infoDeployDataFromFile', [
-          job.sObjectName,
-          csvFile,
-          waitTimeout
-        ])
-      );
+    const deploymentResult: DeploymentResult = {
+      deploymentDirectory,
+      jobResults: []
+    };
+
+    for (const job of deploymentConfig.jobs) {
+      const dataFile = path.resolve(deploymentDirectory, job.dataFileName);
+      if (!fs.existsSync(dataFile)) {
+        throw new SfdxError(messages.getMessage('errorDataFileNotFound', [job.sObjectApiName, dataFile]));
+      }
+
+      let data: unknown[];
+      try {
+        data = readJsonSync(dataFile) as unknown[];
+      } catch (error) {
+        throw new SfdxError(messages.getMessage('errorDataFileNotReadable', [job.sObjectApiName, error.message]));
+      }
+
+      const waitMinutes = job.deployConfig && job.deployConfig.maxWaitMinutes ? job.deployConfig.maxWaitMinutes : 5;
 
       try {
-        await DataBulkUpsertCommand.run([
-          `--targetusername=${this.org.getUsername()}`,
-          `--sobjecttype=${job.sObjectName}`,
-          `--externalid=${job.externalIdField}`,
-          `--csvfile=${csvFile}`,
-          `--wait=${waitTimeout}`
-        ]);
-      } catch (error) {
-        throw new SfdxError(
-          messages.getMessage('errorDeployDataFailed', [
-            job.sObjectName,
-            error.description
-          ])
+        this.log(
+          messages.getMessage('infoDeployingRecordsFromFile', [data.length, job.sObjectApiName, dataFile, waitMinutes])
         );
+
+        const connection = this.org.getConnection();
+
+        let bulkJob: Job;
+        if (job.deployConfig.externalIdFieldApiName) {
+          bulkJob = connection.bulk.createJob(job.sObjectApiName, 'upsert', {
+            extIdField: job.deployConfig.externalIdFieldApiName
+          });
+        } else {
+          bulkJob = connection.bulk.createJob(job.sObjectApiName, 'insert');
+        }
+
+        let bulkBatch = bulkJob.createBatch();
+        bulkBatch.execute(data);
+        const { id: batchId, jobId } = await new Promise<BatchInfo>(resolve => {
+          bulkBatch.on('queue', (batchInfo: BatchInfo) => resolve(batchInfo));
+        });
+
+        bulkJob = connection.bulk.job(jobId);
+        bulkBatch = bulkJob.batch(batchId);
+        bulkBatch.poll(5000, waitMinutes * 60 * 1000);
+
+        const bulkBatchResult = await new Promise<RecordResult[]>(resolve => {
+          bulkBatch.on('response', (recordResults: RecordResult[]) => resolve(recordResults));
+        });
+
+        const errorResults = bulkBatchResult.filter(({ success }) => !success) as ErrorResult[];
+        if (errorResults.length > 0) {
+          errorResults.forEach(({ errors = [] }) =>
+            this.log(messages.getMessage('errorDeployRecordFailed', [errors.join(', ')]))
+          );
+          throw new Error(messages.getMessage('errorDeploySomeRecordFailed'));
+        }
+
+        this.log(messages.getMessage('infoDeployDataSucceeded', [job.sObjectApiName]));
+        deploymentResult.jobResults.push({
+          sObjectApiName: job.sObjectApiName,
+          dataFileName: job.dataFileName,
+          deployedRecordsCount: data.length
+        });
+      } catch (error) {
+        throw new SfdxError(messages.getMessage('errorDeployDataFailed', [job.sObjectApiName, error.message]));
       }
     }
 
-    this.log(messages.getMessage('infoDeployCompleted', [deployDir]));
-    return {};
+    this.log(messages.getMessage('infoDeploymentCompleted', [deploymentDirectory]));
+    return deploymentResult;
   }
 
-  private getDeployDir(): string {
+  private getDeploymentDirectory(): string {
     return this.flags.deploydir && path.isAbsolute(this.flags.deploydir)
       ? this.flags.deploydir
       : path.resolve(process.cwd(), this.flags.deploydir || '');
   }
-
-  private getJobWaitTimeout(jobConfig: JobConfig): number {
-    return this.flags.waitperobject ? this.flags.waitperobject.minutes : 5;
-  }
 }
 
 /**
- * Deployment descriptor format
+ * Result of the data deployment
  */
-interface DeployConfig {
-  /**
-   * Array of Bulk API job configurations
-   */
-  jobs: JobConfig[];
+export interface DeploymentResult {
+  deploymentDirectory: string;
+  jobResults: DeploymentJobResult[];
 }
 
 /**
- * Bulk API job configuration
+ * Result of one data deployment job
  */
-interface JobConfig {
-  /**
-   * Name of the Salesforce object
-   */
-  sObjectName: string;
-  /**
-   * Name of the field used to match existing records
-   */
-  externalIdField: string;
-  /**
-   * Relative path to the CSV file containing the data
-   */
-  csvFile: string;
+export interface DeploymentJobResult {
+  sObjectApiName: string;
+  dataFileName: string;
+  deployedRecordsCount: number;
 }

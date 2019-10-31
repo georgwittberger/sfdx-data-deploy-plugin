@@ -1,7 +1,7 @@
 {
   "name": "sfdx-data-deploy-plugin",
-  "description": "SFDX plugin to deploy data from CSV files to a Salesforce org",
-  "version": "1.0.2",
+  "description": "SFDX plugin to deploy/retrieve data to/from Salesforce",
+  "version": "2.0.0",
   "license": "MIT",
   "author": "Georg Wittberger <georg.wittberger@gmail.com>",
   "homepage": "https://github.com/georgwittberger/sfdx-data-deploy-plugin",
@@ -13,23 +13,29 @@
     "url": "https://github.com/georgwittberger/sfdx-data-deploy-plugin.git"
   },
   "bugs": "https://github.com/georgwittberger/sfdx-data-deploy-plugin/issues",
+  "scripts": {
+    "postpack": "rimraf oclif.manifest.json",
+    "posttest": "tslint -p test -t stylish",
+    "prepack": "rimraf lib && tsc -b && oclif-dev manifest",
+    "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
+    "update-readme": "oclif-dev readme"
+  },
   "dependencies": {
     "@oclif/command": "^1",
     "@oclif/config": "^1",
     "@oclif/errors": "^1",
-    "@salesforce/command": "^1.4.1",
-    "@salesforce/core": "^1.3.2",
-    "fs-extra": "^8.1.0",
-    "salesforce-alm": "^46.22.0",
+    "@salesforce/command": "^2.1.0",
+    "@salesforce/core": "^2.1.3",
+    "fs-extra": "^8",
     "tslib": "^1"
   },
   "devDependencies": {
     "@oclif/dev-cli": "^1",
     "@oclif/plugin-help": "^2",
     "@oclif/test": "^1",
-    "@salesforce/dev-config": "1.4.1",
+    "@salesforce/dev-config": "~1.5.0",
     "@types/chai": "^4",
-    "@types/fs-extra": "^8.0.0",
+    "@types/fs-extra": "^8",
     "@types/mocha": "^5",
     "@types/node": "^10",
     "chai": "^4",
@@ -54,18 +60,11 @@
     "bin": "sfdx",
     "topics": {
       "datadeploy": {
-        "description": "Commands to deploy data to a Salesforce org"
+        "description": "Commands to deploy/retrieve data to/from Salesforce"
       }
     },
     "devPlugins": [
       "@oclif/plugin-help"
     ]
-  },
-  "scripts": {
-    "postpack": "rimraf oclif.manifest.json",
-    "posttest": "tslint -p test -t stylish",
-    "prepack": "rimraf lib && tsc -b && oclif-dev manifest",
-    "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
-    "update-readme": "oclif-dev readme"
   }
 }

@@ -1,14 +1,20 @@
 {
   "jobs": [
     {
-      "sObjectName": "Account",
-      "externalIdField": "AccountId__c",
-      "csvFile": "Account.csv"
+      "sObjectApiName": "Account",
+      "dataFileName": "Account.json",
+      "deployConfig": {
+        "externalIdFieldApiName": "AccountId__c",
+        "maxWaitMinutes": 2
+      }
     },
     {
-      "sObjectName": "Contact",
-      "externalIdField": "ContactId__c",
-      "csvFile": "Contact.csv"
+      "sObjectApiName": "Contact",
+      "dataFileName": "Contact.json",
+      "deployConfig": {
+        "externalIdFieldApiName": "ContactId__c",
+        "maxWaitMinutes": 3
+      }
     }
   ]
 }
