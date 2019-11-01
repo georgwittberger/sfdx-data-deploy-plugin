@@ -4,7 +4,12 @@
 ![GitHub issues](https://img.shields.io/github/issues/georgwittberger/sfdx-data-deploy-plugin)
 ![GitHub](https://img.shields.io/github/license/georgwittberger/sfdx-data-deploy-plugin)
 
-SFDX plugin to deploy data from CSV files to a Salesforce org
+> SFDX plugin to deploy/retrieve data to/from Salesforce
+
+This plugin can be used to retrieve records from any Salesforce org and save them to local JSON files. These data files can be stored in Git repositories to share them with other team members. The plugin can use the data files to deploy records to several other Salesforce orgs. Practical use cases are:
+
+- Maintaining test data as source files in a Git repository
+- Rolling out configuration records as part of deployments
 
 ## Installation
 
@@ -43,95 +48,206 @@ sfdx plugins:install sfdx-data-deploy-plugin
    sfdx plugins:link
    ```
 
-## Deploying Data From CSV Files
+## Creating a Deployment Descriptor
 
-The plugin initiates bulk API `upsert` jobs for a set of CSV files. The job configurations are defined in a JSON file named `datadeploy.json` which is called the deployment descriptor. Preparing a data deployment includes the following steps:
+The `deploy` and `retrieve` commands of the plugin require a directory as the context for the deployment. This directory must contain a special JSON file named `datadeploy.json` which describes the deployment characteristics. The major content of this deployment descriptor is the declaration of jobs which are executed one after another. Each job represents the handling of records for a specific Salesforce object.
 
-1. Create a directory to store the files related to the deployment (e.g. `testdata`).
-2. Create the deployment descriptor file `datadeploy.json` in the deployment directory. See the format description below.
-3. Create the CSV files containing the data to deploy and put them in the deployment directory. One file belongs to a certain sObject. There can be multiple files for the same sObject. See the format description below. You can generate CSV files using a SOQL query with Salesforce CLI:
+Creating a new deployment context requires the following steps.
 
-   ```bash
-   sfdx force:data:soql:query -r csv -q "SELECT Name,... FROM Account WHERE ..." > testdata/Account.csv
+1. Create a new directory in your local file system.
+2. Create a new JSON file named `datadeploy.json` in that directory.
+3. Insert the following content into the JSON file:
+
+   ```json
+   {
+     "jobs": []
+   }
    ```
 
-4. Connect Salesforce CLI to the Salesforce org to deploy the data to (see `force:auth` commands).
-5. Run the SFDX command to start the deployment:
+The following sections explains how to create jobs for data deployment and retrieval.
 
-   ```bash
-   sfdx datadeploy:deploy --deploydir ./testdata
-   ```
+## Creating a Job
 
-### Deployment Descriptor Format
+The `jobs` array in the deployment descriptor must be populated with the configurations of jobs to be executed in the given order. Each job configuration has general properties which apply to both deployment and retrieval. These properties are described in the following table.
 
-The deployment descriptor file `datadeploy.json` must have the following format:
+| Property         | Type   | Description                                                          |
+| ---------------- | ------ | -------------------------------------------------------------------- |
+| `sObjectApiName` | string | API name of the Salesforce object to deploy/retrieve records for.    |
+| `dataFileName`   | string | Name of the JSON file storing the records for the Salesforce object. |
+
+The following example shows a basic job configuration for the Account object.
 
 ```json
 {
-  "jobs": [
-    {
-      "sObjectName": "Account",
-      "externalIdField": "AccountId__c",
-      "csvFile": "Account.csv"
-    },
-    {
-      "sObjectName": "Contact",
-      "externalIdField": "ContactId__c",
-      "csvFile": "Contact.csv"
-    }
-  ]
+  "sObjectApiName": "Account",
+  "dataFileName": "Account.json"
 }
 ```
 
-The `jobs` array defines the bulk API jobs to perform. These jobs are processed in the order as they appear in the array one after another, so jobs for dependent objects should come last.
+## Creating a Deployment Job Configuration
 
-**Job configuration properties:**
+For deployment of records from the data file to Salesforce there are some further configuration properties which can be declared as an object in the `deployConfig` property of the job configuration. The deployment properties are described in the following table.
 
-| Property          | Description                                       | Example                          |
-| ----------------- | ------------------------------------------------- | -------------------------------- |
-| `sObjectName`     | Name of the Salesforce object to deploy data for  | `Account` or `MyCustomObject__c` |
-| `externalIdField` | Name of the field used to match existing records  | `AccountId__c`                   |
-| `csvFile`         | Relative path to the CSV file containing the data | `Account.csv`                    |
+| Property                 | Type   | Description                                                                                                                                                                                                                                             |
+| ------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `externalIdFieldApiName` | string | _(optional)_ API name of the field containing the external ID. If present, the plugin creates an `upsert` job which is capable of updating existing records matching the values in the given field. If not present, the plugin creates an `insert` job. |
+| `maxWaitMinutes`         | number | _(optional)_ Maximum number of minutes to wait for completion of the job. If not present, defaults to 5 minutes.                                                                                                                                        |
 
-### CSV File Format
+The following example shows a deployment job configuration for the Account object, assuming that there is an external ID field named `AccountId__c`.
 
-The CSV files containing the data to deploy must have the same format as it is used for Salesforce bulk API operations. The file must have a header row defining the fields to import for each record. Since the plugin creates bulk API `upsert` jobs the external Id field of the sObject must be present as a column in the CSV file.
-
-Example for Account (with external Id field):
-
-```csv
-AccountId__c,Name
-b7845971-2677-43e0-9316-4909060da942,Demo Company 1
-01898b4a-555b-4010-ab1c-e6e9aeb3f20e,Demo Company 2
-5ff32eec-8b2e-4ff7-8eef-077a9a79c13d,Demo Company 3
+```json
+{
+  "sObjectApiName": "Account",
+  "dataFileName": "Account.json",
+  "deployConfig": {
+    "externalIdFieldApiName": "AccountId__c",
+    "maxWaitMinutes": 2
+  }
+}
 ```
 
-Example for Contact (with relationship to Account using external Id):
+## Creating a Retrieval Job Configuration
 
-```csv
-ContactId__c,FirstName,LastName,Email,Account.AccountId__c
-fead3f99-1469-46fa-b6c0-4a8ce6e45736,Georg,Wittberger,georg.wittberger@gmail.com,b7845971-2677-43e0-9316-4909060da942
+For retrieval of records from Salesforce to the data file there are some further configuration properties which can be declared as an object in the `retrieveConfig` property of the job configuration. The retrieval properties are described in the following table.
+
+| Property               | Type     | Description                                                                                                                             |
+| ---------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `includeFieldApiNames` | string[] | _(optional)_ API names of fields to retrieve for the Salesforce object. If not present, defaults to all fields excluding system fields. |
+| `excludeFieldApiNames` | string[] | _(optional)_ API names of fields to exclude when retrieving all fields.                                                                 |
+| `filterCriteria`       | object   | _(optional)_ Criteria to select specific records to retrieve. See filtering explanation below. If not present, retrieves all records.   |
+| `sortFieldApiNames`    | string[] | _(optional)_ API names of fields to sort the records. See sorting explanation below.                                                    |
+| `maxRecordCount`       | number   | _(optional)_ Maximum number of records to retrieve. If not present, result size depends on Salesforce limits.                           |
+
+The following example shows a retrieval job configuration for the Account object, assuming there is the custom field `AccountId__c`. It retrieves only records where the `Name` begins with "Demo ", fetches only the `Name` and `AccountId__c` fields and sorts the results by `Name` in ascending order.
+
+```json
+{
+  "sObjectApiName": "Account",
+  "dataFileName": "Account.json",
+  "retrieveConfig": {
+    "includeFieldApiNames": ["AccountId__c", "Name"],
+    "filterCriteria": {
+      "Name": { "$like": "Demo %" }
+    },
+    "sortFieldApiNames": ["Name"]
+  }
+}
 ```
 
-TIP: Relationships to other custom sObjects via external Id field can be expressed like this: `otherObject__r.otherObjectExtId__c`
+### Filtering Retrieved Records
 
-### Deployment Example
+The retrieval configuration property `filterCriteria` enables the selection of specific records to include in the result. The property value must be a JSON-based condition expression (like MongoDB) as supported by the [JSForce SObject#find()](https://jsforce.github.io/document/#query) method.
 
-See the subdirectory `data` in this Git repository for an example of a deployment directory.
+The following table shows some examples of filter criteria.
+
+| Filter Criteria                              | Meaning                                                                 |
+| -------------------------------------------- | ----------------------------------------------------------------------- |
+| `{ "Name": "Umbrella Corp." }`               | Records with exact `Name` value "Umbrella Corp."                        |
+| `{ "Account.Name": "Umbrella Corp." }`       | Records where related `Account` has exact `Name` value "Umbrella Corp." |
+| `{ "FirstName": { "$like": "Hello%" } }`     | Records with `FirstName` starting with "Hello"                          |
+| `{ "LastName": { "$like": "%World" } }`      | Records with `LastName` ending with "World"                             |
+| `{ "EMail": { "$like": "%gmail%" } }`        | Records with `EMail` containing "gmail"                                 |
+| `{ "GrossValue": { "$gte": 1000 } }`         | Records with `GrossValue` greater than or equal to 1000                 |
+| `{ "NetValue": { "$lte": 500 } }`            | Records with `NetValue` less than or equal to 500                       |
+| `{ "FirstName": "John", "LastName": "Doe" }` | Records with `FirstName` exactly "John" AND `LastName` exactly "Doe"    |
+
+### Sorting Retrieved Records
+
+The retrieval configuration property `sortFieldApiNames` enables sorting of the records in the result by multiple fields. The property value must be an array of the field API names. The first field in the array is the strongest sorting criterion. If a second field is given then records with the same value in the first sorting field are sorted by the value of the second field and so on.
+
+If a field name is given without any prefix (e.g. `FirstName`) then records are sorted by this field in ascending order.
+
+If a field name is prefixed by a dash (e.g. `-LastName`) then records are sorted by this field in descending order.
+
+## Deploying Data to Salesforce
+
+The plugin requires a connection to a Salesforce org in order to deploy records from data files. Once the deployment descriptor has been prepared and the data files contain the proper records follow these steps to perform the deployment.
+
+1. Connect Salesforce CLI to the target Salesforce org (see the [auth commands](https://developer.salesforce.com/docs/atlas.en-us.sfdx_cli_reference.meta/sfdx_cli_reference/cli_reference_force_auth.htm#cli_reference_force_auth) in the documentation).
+2. Run the `deploy` command (here assuming that the deployment descriptor is located in the subdirectory `testdata`):
+
+   ```bash
+   sfdx datadeploy:deploy -d testdata -u yourname@yourorg.com
+   ```
+
+TIP: If the deployment descriptor is in the current working directory you can omit the `-d` flag.
+
+## Retrieving Data from Salesforce
+
+The plugin requires a connection to a Salesforce org in order to retrieve records to data files. Once the deployment descriptor has been prepared with the proper retrieval configuration follow these steps to retrieve records.
+
+1. Connect Salesforce CLI to the target Salesforce org (see the [auth commands](https://developer.salesforce.com/docs/atlas.en-us.sfdx_cli_reference.meta/sfdx_cli_reference/cli_reference_force_auth.htm#cli_reference_force_auth) in the documentation).
+2. Run the `retrieve` command (here assuming that the deployment descriptor is located in the subdirectory `testdata`):
+
+   ```bash
+   sfdx datadeploy:retrieve -d testdata -u yourname@yourorg.com
+   ```
+
+TIP: If the deployment descriptor is in the current working directory you can omit the `-d` flag.
+
+## Tips and Examples
+
+### Deploying and Retrieving Lookup Relationships
+
+In the data file use the relationship name followed by the external ID field API name of the related object and provide the other record's external ID value. In the following example for the Contact object the reference to the Account is created by referring to the custom external ID field `AccountId__c` defined on the Account object.
+
+```json
+{
+  "Account.AccountId__c": "b7845971-2677-43e0-9316-4909060da942"
+}
+```
+
+Note that custom lookup relationships must be suffixed by `__r` as in the following example.
+
+```json
+{
+  "OtherObject__r.OtherExternalId__c": "b7845971-2677-43e0-9316-4909060da942"
+}
+```
+
+When retrieving a lookup relationship using the external ID field of the related object use the following syntax in the retrieval configuration of the job. The example fetches the Account relationship for Contact records using the custom external ID field `AccountId__c` defined on the Account object.
+
+```json
+{
+  "sObjectApiName": "Contact",
+  "dataFileName": "Contact.json",
+  "retrieveConfig": {
+    "includeFieldApiNames": ["ContactId__c", "Account.AccountId__c"]
+  }
+}
+```
+
+If you want to retrieve all fields but still include further lookup relationships specify an asterisk as in the following example for the Contact object.
+
+```json
+{
+  "sObjectApiName": "Contact",
+  "dataFileName": "Contact.json",
+  "retrieveConfig": {
+    "includeFieldApiNames": ["*", "Account.AccountId__c"],
+    "excludeFieldApiNames": ["AccountId"]
+  }
+}
+```
+
+### Example Configuration
+
+See the subdirectory `data` in this Git repository for an example.
 
 ## Commands
 
 <!-- commands -->
 
-- [`sfdx datadeploy:deploy [-d <directory>] [-w <minutes>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-datadeploydeploy--d-directory--w-minutes--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
+- [`sfdx datadeploy:deploy [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-datadeploydeploy--d-directory--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
+- [`sfdx datadeploy:retrieve [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-datadeployretrieve--d-directory--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 
-## `sfdx datadeploy:deploy [-d <directory>] [-w <minutes>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
+## `sfdx datadeploy:deploy [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
-deploy data from CSV files to a Salesforce org
+deploy records from data files to Salesforce
 
 ```
 USAGE
-  $ sfdx datadeploy:deploy [-d <directory>] [-w <minutes>] [-u <string>] [--apiversion <string>] [--json] [--loglevel
+  $ sfdx datadeploy:deploy [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel
   trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
 
 OPTIONS
@@ -141,9 +257,6 @@ OPTIONS
 
   -u, --targetusername=targetusername                                               username or alias for the target
                                                                                     org; overrides default target org
-
-  -w, --waitperobject=waitperobject                                                 number of minutes to wait for each
-                                                                                    bulk API job (default: 5 minutes)
 
   --apiversion=apiversion                                                           override the api version used for
                                                                                     api requests made by this command
@@ -157,7 +270,36 @@ EXAMPLE
   $ sfdx datadeploy:deploy --deploydir ./testdata --targetusername myOrg@example.com
 ```
 
-_See code: [lib\commands\datadeploy\deploy.js](https://github.com/georgwittberger/sfdx-data-deploy-plugin/blob/v1.0.1/lib\commands\datadeploy\deploy.js)_
+_See code: [lib\commands\datadeploy\deploy.js](https://github.com/georgwittberger/sfdx-data-deploy-plugin/blob/v2.0.0/lib\commands\datadeploy\deploy.js)_
+
+## `sfdx datadeploy:retrieve [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
+
+retrieve records from Salesforce to data files
+
+```
+USAGE
+  $ sfdx datadeploy:retrieve [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel
+  trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
+
+OPTIONS
+  -d, --deploydir=deploydir                                                         directory containing the deployment
+                                                                                    descriptor 'datadeploy.json'
+                                                                                    (default: current working directory)
+
+  -u, --targetusername=targetusername                                               username or alias for the target
+                                                                                    org; overrides default target org
+
+  --apiversion=apiversion                                                           override the api version used for
+                                                                                    api requests made by this command
+
+  --json                                                                            format output as json
+
+  --loglevel=(trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL)  [default: warn] logging level for
+                                                                                    this command invocation
+
+EXAMPLE
+  $ sfdx datadeploy:retrieve --deploydir ./testdata --targetusername myOrg@example.com
+```
 
 <!-- commandsstop -->
 
