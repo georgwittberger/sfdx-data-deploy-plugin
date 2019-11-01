@@ -4,7 +4,7 @@
   "infoDeploymentDirectory": "Deploying data from directory: %s",
   "infoDeploymentFile": "Using deployment descriptor: %s",
   "infoDeployingRecordsFromFile": "Deploying %s records for sObject '%s' from file '%s' waiting at most %s minutes",
-  "infoDeployDataSucceeded": "Data for sObject '%s' successfully deployed.",
+  "infoDeployDataSucceeded": "%s records for sObject '%s' successfully deployed.",
   "infoDeploymentCompleted": "Deployment from directory '%s' successfully completed.",
   "errorDataFileNotFound": "Data file for sObject '%s' not found: %s",
   "errorDeploymentFileNotReadable": "Deployment descriptor '%s' is not readable.",

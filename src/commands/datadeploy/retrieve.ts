@@ -3,6 +3,10 @@ import { Messages, SfdxError } from '@salesforce/core';
 import { readJsonSync, writeJsonSync } from 'fs-extra';
 import * as path from 'path';
 import { DeploymentConfig } from '../../config/deployment-config';
+import deleteMetaAttributes from '../../transform/delete-meta-attributes';
+import flattenNestedObjects from '../../transform/flatten-nested-objects';
+import transformContactAccountRelationship from '../../transform/transform-contact-account-relationship';
+import transformRelationships from '../../transform/transform-relationships';
 
 Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('sfdx-data-deploy-plugin', 'datadeploy-retrieve');
@@ -70,6 +74,10 @@ export default class DataDeployRetrieve extends SfdxCommand {
               records.forEach(record => {
                 deleteMetaAttributes(record);
                 flattenNestedObjects(record);
+                transformRelationships(record);
+                if (job.sObjectApiName.toLowerCase() === 'contact') {
+                  transformContactAccountRelationship(record);
+                }
               });
               resolve(records);
             }
@@ -97,35 +105,6 @@ export default class DataDeployRetrieve extends SfdxCommand {
     return this.flags.deploydir && path.isAbsolute(this.flags.deploydir)
       ? this.flags.deploydir
       : path.resolve(process.cwd(), this.flags.deploydir || '');
-  }
-}
-
-// tslint:disable-next-line: no-any
-function deleteMetaAttributes(record: any): void {
-  if (typeof record.attributes === 'object' && record.attributes !== null) {
-    delete record.attributes;
-  }
-  for (const property in record) {
-    if (!record.hasOwnProperty(property)) continue;
-    if (typeof record[property] === 'object' && record[property] !== null) {
-      deleteMetaAttributes(record[property]);
-    }
-  }
-}
-
-// tslint:disable-next-line: no-any
-function flattenNestedObjects(record: any): void {
-  for (const property in record) {
-    if (!record.hasOwnProperty(property)) continue;
-    const childObject = record[property];
-    if (typeof childObject === 'object' && childObject !== null) {
-      flattenNestedObjects(childObject);
-      for (const childProperty in childObject) {
-        if (!childObject.hasOwnProperty(childProperty)) continue;
-        record[property + '.' + childProperty] = childObject[childProperty];
-      }
-      delete record[property];
-    }
   }
 }
 

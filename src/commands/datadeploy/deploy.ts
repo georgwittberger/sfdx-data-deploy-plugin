@@ -99,7 +99,7 @@ export default class DataDeployDeploy extends SfdxCommand {
           throw new Error(messages.getMessage('errorDeploySomeRecordFailed'));
         }
 
-        this.log(messages.getMessage('infoDeployDataSucceeded', [job.sObjectApiName]));
+        this.log(messages.getMessage('infoDeployDataSucceeded', [data.length, job.sObjectApiName]));
         deploymentResult.jobResults.push({
           sObjectApiName: job.sObjectApiName,
           dataFileName: job.dataFileName,
