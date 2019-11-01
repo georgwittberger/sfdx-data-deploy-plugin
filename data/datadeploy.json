@@ -12,7 +12,7 @@
         "filterCriteria": {
           "Name": { "$like": "Demo %" }
         },
-        "sortFieldNames": ["Name"]
+        "sortFieldApiNames": ["Name"]
       }
     },
     {
@@ -27,7 +27,7 @@
         "filterCriteria": {
           "LastName": "Wittberger"
         },
-        "sortFieldNames": ["LastName"]
+        "sortFieldApiNames": ["LastName"]
       }
     }
   ]

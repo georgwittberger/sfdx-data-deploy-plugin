@@ -69,8 +69,8 @@ export default class DataDeployRetrieve extends SfdxCommand {
           if (job.retrieveConfig && job.retrieveConfig.filterCriteria) {
             query.where(job.retrieveConfig.filterCriteria);
           }
-          if (job.retrieveConfig && job.retrieveConfig.sortFieldNames) {
-            query.sort(job.retrieveConfig.sortFieldNames.join(' '));
+          if (job.retrieveConfig && job.retrieveConfig.sortFieldApiNames) {
+            query.sort(job.retrieveConfig.sortFieldApiNames.join(' '));
           }
           if (job.retrieveConfig && job.retrieveConfig.maxRecordCount) {
             query.limit(job.retrieveConfig.maxRecordCount);

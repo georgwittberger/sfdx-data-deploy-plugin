@@ -18,6 +18,6 @@ export interface JobRetrieveConfig {
   includeFieldApiNames?: string[];
   excludeFieldApiNames?: string[];
   filterCriteria?: object;
-  sortFieldNames?: string[];
+  sortFieldApiNames?: string[];
   maxRecordCount?: number;
 }

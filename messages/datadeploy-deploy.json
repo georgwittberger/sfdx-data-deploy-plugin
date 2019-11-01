@@ -1,5 +1,5 @@
 {
-  "commandDescription": "deploy data from data files to Salesforce",
+  "commandDescription": "deploy records from data files to Salesforce",
   "deploydirFlagDescription": "directory containing the deployment descriptor 'datadeploy.json' (default: current working directory)",
   "infoDeploymentDirectory": "Deploying data from directory: %s",
   "infoDeploymentFile": "Using deployment descriptor: %s",
@@ -10,6 +10,6 @@
   "errorDeploymentFileNotReadable": "Deployment descriptor '%s' is not readable.",
   "errorDataFileNotReadable": "Data file for sObject '%s' is not readable. Error: %s",
   "errorDeployRecordFailed": "Deployment of record failed with error: %s",
-  "errorDeploySomeRecordFailed": "At least one record failed to deploy.",
-  "errorDeployDataFailed": "Failed to deploy data for sObject '%s'. Error: %s"
+  "errorDeploySomeRecordFailed": "At least one record was not deployed.",
+  "errorDeployDataFailed": "Failed to deploy records for sObject '%s'. Error: %s"
 }
