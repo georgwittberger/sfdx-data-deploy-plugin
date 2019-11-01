@@ -15,7 +15,7 @@ export interface JobDeployConfig {
 }
 
 export interface JobRetrieveConfig {
-  fieldApiNames: string[];
+  includeFieldApiNames?: string[];
   filterCriteria?: object;
   sortFieldNames?: string[];
   maxRecordCount?: number;

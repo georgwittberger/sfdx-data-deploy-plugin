@@ -8,7 +8,7 @@
         "maxWaitMinutes": 2
       },
       "retrieveConfig": {
-        "fieldApiNames": ["AccountId__c", "Name"],
+        "includeFieldApiNames": ["AccountId__c", "Name"],
         "filterCriteria": {
           "Name": { "$like": "Demo %" }
         },
@@ -23,7 +23,7 @@
         "maxWaitMinutes": 3
       },
       "retrieveConfig": {
-        "fieldApiNames": ["ContactId__c", "FirstName", "LastName", "Email", "Account.AccountId__c"],
+        "includeFieldApiNames": ["ContactId__c", "FirstName", "LastName", "Email", "Account.AccountId__c"],
         "filterCriteria": {
           "LastName": "Wittberger"
         },

@@ -11,5 +11,5 @@
   "errorDataFileNotReadable": "Data file for sObject '%s' is not readable. Error: %s",
   "errorDeployRecordFailed": "Deployment of record failed with error: %s",
   "errorDeploySomeRecordFailed": "At least one record failed to deploy.",
-  "errorDeployDataFailed": "Data for sObject '%s' failed to deploy. Error: %s"
+  "errorDeployDataFailed": "Failed to deploy data for sObject '%s'. Error: %s"
 }

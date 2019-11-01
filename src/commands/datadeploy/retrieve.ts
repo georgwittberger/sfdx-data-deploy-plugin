@@ -4,6 +4,7 @@ import { readJsonSync, writeJsonSync } from 'fs-extra';
 import * as path from 'path';
 import { DeploymentConfig } from '../../config/deployment-config';
 import deleteMetaAttributes from '../../transform/delete-meta-attributes';
+import deleteSystemFields from '../../transform/delete-system-fields';
 import flattenNestedObjects from '../../transform/flatten-nested-objects';
 import transformContactAccountRelationship from '../../transform/transform-contact-account-relationship';
 import transformRelationships from '../../transform/transform-relationships';
@@ -57,14 +58,20 @@ export default class DataDeployRetrieve extends SfdxCommand {
         const connection = this.org.getConnection();
 
         const data = await new Promise<unknown[]>((resolve, reject) => {
-          const query = connection.sobject(job.sObjectApiName).select(job.retrieveConfig.fieldApiNames);
-          if (job.retrieveConfig.filterCriteria) {
+          const query = connection
+            .sobject(job.sObjectApiName)
+            .select(
+              job.retrieveConfig && job.retrieveConfig.includeFieldApiNames
+                ? job.retrieveConfig.includeFieldApiNames
+                : ['*']
+            );
+          if (job.retrieveConfig && job.retrieveConfig.filterCriteria) {
             query.where(job.retrieveConfig.filterCriteria);
           }
-          if (job.retrieveConfig.sortFieldNames) {
+          if (job.retrieveConfig && job.retrieveConfig.sortFieldNames) {
             query.sort(job.retrieveConfig.sortFieldNames.join(' '));
           }
-          if (job.retrieveConfig.maxRecordCount) {
+          if (job.retrieveConfig && job.retrieveConfig.maxRecordCount) {
             query.limit(job.retrieveConfig.maxRecordCount);
           }
           query.execute({}, (error: Error, records: unknown[]) => {
@@ -73,6 +80,7 @@ export default class DataDeployRetrieve extends SfdxCommand {
             } else {
               records.forEach(record => {
                 deleteMetaAttributes(record);
+                deleteSystemFields(record);
                 flattenNestedObjects(record);
                 transformRelationships(record);
                 if (job.sObjectApiName.toLowerCase() === 'contact') {
