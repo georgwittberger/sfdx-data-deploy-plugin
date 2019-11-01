@@ -3,6 +3,7 @@ import { Messages, SfdxError } from '@salesforce/core';
 import { readJsonSync, writeJsonSync } from 'fs-extra';
 import * as path from 'path';
 import { DeploymentConfig } from '../../config/deployment-config';
+import deleteExcludedFields from '../../transform/delete-excluded-fields';
 import deleteMetaAttributes from '../../transform/delete-meta-attributes';
 import deleteSystemFields from '../../transform/delete-system-fields';
 import flattenNestedObjects from '../../transform/flatten-nested-objects';
@@ -85,6 +86,9 @@ export default class DataDeployRetrieve extends SfdxCommand {
                 transformRelationships(record);
                 if (job.sObjectApiName.toLowerCase() === 'contact') {
                   transformContactAccountRelationship(record);
+                }
+                if (job.retrieveConfig && job.retrieveConfig.excludeFieldApiNames) {
+                  deleteExcludedFields(record, job.retrieveConfig.excludeFieldApiNames);
                 }
               });
               resolve(records);
