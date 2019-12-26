@@ -1,7 +1,7 @@
 // import { expect, test } from '@salesforce/command/lib/test';
 // import { ensureJsonMap, ensureString } from '@salesforce/ts-types';
 
-// describe('datadeploy:deploy', () => {
+// describe('datadeploy:retrieve', () => {
 //   test
 //     .withOrg({ username: 'test@org.com' }, true)
 //     .withConnectionRequest(request => {

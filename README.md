@@ -68,7 +68,7 @@ The following sections explains how to create jobs for data deployment and retri
 
 ## Creating a Job
 
-The `jobs` array in the deployment descriptor must be populated with the configurations of jobs to be executed in the given order. Each job configuration has general properties which apply to both deployment and retrieval. These properties are described in the following table.
+The `jobs` array in the deployment descriptor must be populated with the configurations of jobs to be executed sequentially in the given order. Each job configuration has general properties which apply to both deployment and retrieval. These properties are described in the following table.
 
 | Property         | Type   | Description                                                          |
 | ---------------- | ------ | -------------------------------------------------------------------- |
@@ -105,6 +105,8 @@ The following example shows a deployment job configuration for the Account objec
   }
 }
 ```
+
+Data is deployed using the [Salesforce Bulk API](https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/). The plugin checks the results of each Bulk API job before continuing with the next one. The deployment fails with an error if at least one record could not be deployed properly. Note that it this case some records may still have been deployed because the Bulk API does not roll back the whole job.
 
 ## Creating a Retrieval Job Configuration
 
