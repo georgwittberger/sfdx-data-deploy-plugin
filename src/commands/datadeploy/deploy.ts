@@ -87,14 +87,16 @@ export default class DataDeployDeploy extends SfdxCommand {
         bulkBatch = bulkJob.batch(batchId);
         bulkBatch.poll(5000, waitMinutes * 60 * 1000);
 
-        const bulkBatchResult = await new Promise<RecordResult[]>(resolve => {
-          bulkBatch.on('response', (recordResults: RecordResult[]) => resolve(recordResults));
+        const bulkBatchResult = await new Promise<BatchRecordResult[]>(resolve => {
+          bulkBatch.on('response', (recordResults: RecordResult[]) => {
+            resolve(recordResults.map((result, index) => ({ result, record: data[index] })));
+          });
         });
 
-        const errorResults = bulkBatchResult.filter(({ success }) => !success) as ErrorResult[];
+        const errorResults = bulkBatchResult.filter(({ result: { success } }) => !success) as BatchRecordErrorResult[];
         if (errorResults.length > 0) {
-          errorResults.forEach(({ errors = [] }) =>
-            this.log(messages.getMessage('errorDeployRecordFailed', [errors.join(', ')]))
+          errorResults.forEach(({ result: { errors = [] }, record }) =>
+            this.log(messages.getMessage('errorDeployRecordFailed', [JSON.stringify(record), errors.join(', ')]))
           );
           throw new Error(messages.getMessage('errorDeploySomeRecordFailed'));
         }
@@ -136,4 +138,20 @@ export interface DeploymentJobResult {
   sObjectApiName: string;
   dataFileName: string;
   deployedRecordsCount: number;
+}
+
+/**
+ * Result of the deployment of a single record.
+ */
+interface BatchRecordResult {
+  result: RecordResult;
+  record: unknown;
+}
+
+/**
+ * Error result of the deployment of a single record.
+ */
+interface BatchRecordErrorResult {
+  result: ErrorResult;
+  record: unknown;
 }

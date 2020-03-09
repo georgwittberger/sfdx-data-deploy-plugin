@@ -9,7 +9,7 @@
   "errorDataFileNotFound": "Data file for sObject '%s' not found: %s",
   "errorDeploymentFileNotReadable": "Deployment descriptor '%s' is not readable.",
   "errorDataFileNotReadable": "Data file for sObject '%s' is not readable. Error: %s",
-  "errorDeployRecordFailed": "Deployment of record failed with error: %s",
+  "errorDeployRecordFailed": "Deployment of record failed.\nRecord: %s\nErrors: %s",
   "errorDeploySomeRecordFailed": "At least one record was not deployed.",
   "errorDeployDataFailed": "Failed to deploy records for sObject '%s'. Error: %s"
 }
