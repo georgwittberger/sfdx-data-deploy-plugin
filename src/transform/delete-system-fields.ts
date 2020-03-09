@@ -10,6 +10,9 @@ export default function deleteSystemFields(record: any): void {
   delete record.LastModifiedDate;
   delete record.LastModifiedById;
   delete record.SystemModstamp;
+  delete record.LastActivityDate;
+  delete record.LastViewedDate;
+  delete record.LastReferencedDate;
   for (const property in record) {
     if (!record.hasOwnProperty(property)) continue;
     if (typeof record[property] === 'object' && record[property] !== null) {
