@@ -1,52 +1,37 @@
 # SFDX Data Deploy Plugin
 
-![npm](https://img.shields.io/npm/v/sfdx-data-deploy-plugin)
-![GitHub issues](https://img.shields.io/github/issues/georgwittberger/sfdx-data-deploy-plugin)
-![GitHub](https://img.shields.io/github/license/georgwittberger/sfdx-data-deploy-plugin)
-
 > SFDX plugin to deploy/retrieve data to/from Salesforce
 
-This plugin can be used to retrieve records from any Salesforce org and save them to local JSON files. These data files can be stored in Git repositories to share them with other team members. The plugin can use the data files to deploy records to several other Salesforce orgs. Practical use cases are:
+[![Version](https://img.shields.io/npm/v/sfdx-data-deploy-plugin)](https://www.npmjs.com/package/sfdx-data-deploy-plugin)
+[![GitHub Issues](https://img.shields.io/github/issues/georgwittberger/sfdx-data-deploy-plugin)](https://github.com/georgwittberger/sfdx-data-deploy-plugin/issues)
+[![Downloads/week](https://img.shields.io/npm/dw/sfdx-data-deploy-plugin)](https://www.npmjs.com/package/sfdx-data-deploy-plugin)
+[![License](https://img.shields.io/github/license/georgwittberger/sfdx-data-deploy-plugin)](https://github.com/georgwittberger/sfdx-data-deploy-plugin/blob/master/LICENSE.txt)
+
+This [Salesforce CLI](https://developer.salesforce.com/tools/sfdxcli) plugin can be used to retrieve records from any Salesforce org and save them to local JSON files. These data files can be stored in Git repositories to share them with other team members. The plugin can use the data files to deploy records to several other Salesforce orgs. Practical use cases are:
 
 - Maintaining test data as source files in a Git repository
 - Rolling out configuration records as part of deployments
 
-## Installation
+---
 
-### Installation Using Salesforce CLI
+<!-- toc -->
+* [SFDX Data Deploy Plugin](#sfdx-data-deploy-plugin)
+* [Installation](#installation)
+* [Usage](#usage)
+* [Commands](#commands)
+* [License](#license)
+<!-- tocstop -->
 
-```bash
-sfdx plugins:install sfdx-data-deploy-plugin
-```
+# Installation
 
-### Installation Using Sources
-
-1. Install [Salesforce CLI](https://developer.salesforce.com/tools/sfdxcli) and [Node.js](https://nodejs.org/).
-2. Clone this Git repository and enter the local directory:
-
-   ```bash
-   git clone https://github.com/georgwittberger/sfdx-data-deploy-plugin.git
-   cd sfdx-data-deploy-plugin
-   ```
-
-3. Install Yarn and TypeScript (if not already installed):
+1. Download and install [Salesforce CLI](https://developer.salesforce.com/tools/sfdxcli).
+2. Install the plugin:
 
    ```bash
-   npm install -g yarn
-   npm install -g typescript
+   sfdx plugins:install sfdx-data-deploy-plugin
    ```
 
-4. Install the plugin dependencies:
-
-   ```bash
-   yarn install
-   ```
-
-5. Link the plugin to Salesforce CLI:
-
-   ```bash
-   sfdx plugins:link
-   ```
+# Usage
 
 ## Creating a Deployment Descriptor
 
@@ -236,12 +221,11 @@ If you want to retrieve all fields but still include further lookup relationship
 
 See the subdirectory `data` in this Git repository for an example.
 
-## Commands
+# Commands
 
 <!-- commands -->
-
-- [`sfdx datadeploy:deploy [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-datadeploydeploy--d-directory--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
-- [`sfdx datadeploy:retrieve [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-datadeployretrieve--d-directory--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
+* [`sfdx datadeploy:deploy [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-datadeploydeploy--d-directory--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
+* [`sfdx datadeploy:retrieve [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-datadeployretrieve--d-directory--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 
 ## `sfdx datadeploy:deploy [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
@@ -249,7 +233,7 @@ deploy records from data files to Salesforce
 
 ```
 USAGE
-  $ sfdx datadeploy:deploy [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel
+  $ sfdx datadeploy:deploy [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel 
   trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
 
 OPTIONS
@@ -272,15 +256,13 @@ EXAMPLE
   $ sfdx datadeploy:deploy --deploydir ./testdata --targetusername myOrg@example.com
 ```
 
-_See code: [lib\commands\datadeploy\deploy.js](https://github.com/georgwittberger/sfdx-data-deploy-plugin/blob/v2.0.0/lib\commands\datadeploy\deploy.js)_
-
 ## `sfdx datadeploy:retrieve [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
 retrieve records from Salesforce to data files
 
 ```
 USAGE
-  $ sfdx datadeploy:retrieve [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel
+  $ sfdx datadeploy:retrieve [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel 
   trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
 
 OPTIONS
@@ -302,9 +284,8 @@ OPTIONS
 EXAMPLE
   $ sfdx datadeploy:retrieve --deploydir ./testdata --targetusername myOrg@example.com
 ```
-
 <!-- commandsstop -->
 
-## License
+# License
 
 [MIT](https://opensource.org/licenses/MIT)
