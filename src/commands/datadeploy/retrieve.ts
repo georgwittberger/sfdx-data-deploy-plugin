@@ -1,4 +1,4 @@
-import { flags, SfdxCommand } from '@salesforce/command';
+import { flags, SfdxCommand, SfdxResult } from '@salesforce/command';
 import { Messages, SfdxError } from '@salesforce/core';
 import { readJsonSync, writeJsonSync } from 'fs-extra';
 import * as path from 'path';
@@ -20,6 +20,19 @@ export default class DataDeployRetrieve extends SfdxCommand {
   public static description = messages.getMessage('commandDescription');
 
   public static examples = ['$ sfdx datadeploy:retrieve --deploydir ./testdata --targetusername myOrg@example.com'];
+
+  public static result: SfdxResult = {
+    tableColumnData: {
+      columns: [
+        { key: 'sObjectApiName', label: messages.getMessage('resultTableSObject') },
+        { key: 'dataFileName', label: messages.getMessage('resultTableDataFile') },
+        { key: 'retrievedRecordsCount', label: messages.getMessage('resultTableRecords') }
+      ]
+    },
+    display() {
+      this.ux.table(((this.data as unknown) as RetrievalResult).jobResults, this.tableColumnData);
+    }
+  };
 
   protected static flagsConfig = {
     deploydir: flags.directory({

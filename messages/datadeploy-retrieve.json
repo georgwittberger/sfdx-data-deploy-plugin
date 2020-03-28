@@ -1,10 +1,13 @@
 {
-  "commandDescription": "retrieve records from Salesforce to data files",
-  "deploydirFlagDescription": "directory containing the deployment descriptor 'datadeploy.json' (default: current working directory)",
-  "infoDeploymentDirectory": "Retrieving data to directory: %s",
-  "infoDeploymentFile": "Using deployment descriptor: %s",
-  "infoRetrievingRecordsToFile": "Retrieving records for sObject '%s' to file '%s'",
-  "infoRetrieveDataSucceeded": "%s records for sObject '%s' successfully retrieved.",
-  "infoRetrievalCompleted": "Retrieval to directory '%s' successfully completed.",
-  "errorRetrieveDataFailed": "Failed to retrieve records for sObject '%s'. Error: %s"
+  "commandDescription": "Retrieve records from Salesforce to data files",
+  "deploydirFlagDescription": "Directory containing the deployment descriptor 'datadeploy.json' (default: current working directory)",
+  "infoDeploymentDirectory": "→ Retrieving data to directory: %s",
+  "infoDeploymentFile": "→ Using deployment descriptor: %s",
+  "infoRetrievingRecordsToFile": "→ Retrieving records for sObject '%s' to file '%s'",
+  "infoRetrieveDataSucceeded": "✓ %s records for sObject '%s' successfully retrieved.",
+  "infoRetrievalCompleted": "✓ Retrieval to directory '%s' successfully completed.\n",
+  "resultTableSObject": "sObject",
+  "resultTableDataFile": "Data File",
+  "resultTableRecords": "Records",
+  "errorRetrieveDataFailed": "✕ Failed to retrieve records for sObject '%s'. Error: %s"
 }

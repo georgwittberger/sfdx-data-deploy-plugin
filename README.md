@@ -15,11 +15,12 @@ This [Salesforce CLI](https://developer.salesforce.com/tools/sfdxcli) plugin can
 ---
 
 <!-- toc -->
-* [SFDX Data Deploy Plugin](#sfdx-data-deploy-plugin)
-* [Installation](#installation)
-* [Usage](#usage)
-* [Commands](#commands)
-* [License](#license)
+- [SFDX Data Deploy Plugin](#sfdx-data-deploy-plugin)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Commands](#commands)
+- [Version History](#version-history)
+- [License](#license)
 <!-- tocstop -->
 
 # Installation
@@ -30,6 +31,8 @@ This [Salesforce CLI](https://developer.salesforce.com/tools/sfdxcli) plugin can
    ```bash
    sfdx plugins:install sfdx-data-deploy-plugin
    ```
+
+TIP: If you want to install the plugin on a CI server you must add it to the whitelisted plugins as described in [this blog post](https://developer.salesforce.com/blogs/2017/10/salesforce-dx-cli-plugin-update.html).
 
 # Usage
 
@@ -91,7 +94,7 @@ The following example shows a deployment job configuration for the Account objec
 }
 ```
 
-Data is deployed using the [Salesforce Bulk API](https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/). The plugin checks the results of each Bulk API job before continuing with the next one. The deployment fails with an error if at least one record could not be deployed properly. Note that it this case some records may still have been deployed because the Bulk API does not roll back the whole job.
+Data is deployed using the [Salesforce Bulk API](https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/). The plugin checks the results of each Bulk API job before continuing with the next one. The deployment fails with an error if at least one record could not be deployed properly. Note that in this case some records may still have been deployed because the Bulk API does not roll back the whole job.
 
 ## Creating a Retrieval Job Configuration
 
@@ -127,16 +130,27 @@ The retrieval configuration property `filterCriteria` enables the selection of s
 
 The following table shows some examples of filter criteria.
 
-| Filter Criteria                              | Meaning                                                                 |
-| -------------------------------------------- | ----------------------------------------------------------------------- |
-| `{ "Name": "Umbrella Corp." }`               | Records with exact `Name` value "Umbrella Corp."                        |
-| `{ "Account.Name": "Umbrella Corp." }`       | Records where related `Account` has exact `Name` value "Umbrella Corp." |
-| `{ "FirstName": { "$like": "Hello%" } }`     | Records with `FirstName` starting with "Hello"                          |
-| `{ "LastName": { "$like": "%World" } }`      | Records with `LastName` ending with "World"                             |
-| `{ "EMail": { "$like": "%gmail%" } }`        | Records with `EMail` containing "gmail"                                 |
-| `{ "GrossValue": { "$gte": 1000 } }`         | Records with `GrossValue` greater than or equal to 1000                 |
-| `{ "NetValue": { "$lte": 500 } }`            | Records with `NetValue` less than or equal to 500                       |
-| `{ "FirstName": "John", "LastName": "Doe" }` | Records with `FirstName` exactly "John" AND `LastName` exactly "Doe"    |
+| Filter Criteria                               | Meaning                                                                 |
+| --------------------------------------------- | ----------------------------------------------------------------------- |
+| `{ "Name": "Umbrella Corp." }`                | Records with exact `Name` value "Umbrella Corp."                        |
+| `{ "Account.Name": "Umbrella Corp." }`        | Records where related `Account` has exact `Name` value "Umbrella Corp." |
+| `{ "FirstName": { "$like": "Hello%" } }`      | Records with `FirstName` starting with "Hello"                          |
+| `{ "LastName": { "$like": "%World" } }`       | Records with `LastName` ending with "World"                             |
+| `{ "EMail": { "$like": "%gmail%" } }`         | Records with `EMail` containing "gmail"                                 |
+| `{ "GrossValue": { "$gte": 1000 } }`          | Records with `GrossValue` greater than or equal to 1000                 |
+| `{ "NetValue": { "$lte": 500 } }`             | Records with `NetValue` less than or equal to 500                       |
+| `{ "FirstName": "John", "LastName": "Doe" }`  | Records with `FirstName` exactly "John" AND `LastName` exactly "Doe"    |
+| `{ "FirstName": { "$in": ["Bob", "John"] } }` | Records with `FirstName` being exactly "Bob" OR "John"                  |
+
+Another more complex example with OR-combined criteria.
+
+```json
+{
+  "$or": [{ "Name": { "$like": "Test%" } }, { "GrossValue": { "$lte": 500 } }]
+}
+```
+
+It selects those records with a name starting with "Test" OR with a gross value less than/equal to 500.
 
 ### Sorting Retrieved Records
 
@@ -224,20 +238,21 @@ See the subdirectory `data` in this Git repository for an example.
 # Commands
 
 <!-- commands -->
-* [`sfdx datadeploy:deploy [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-datadeploydeploy--d-directory--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
-* [`sfdx datadeploy:retrieve [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-datadeployretrieve--d-directory--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
+
+- [`sfdx datadeploy:deploy [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-datadeploydeploy--d-directory--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
+- [`sfdx datadeploy:retrieve [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-datadeployretrieve--d-directory--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 
 ## `sfdx datadeploy:deploy [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
-deploy records from data files to Salesforce
+Deploy records from data files to Salesforce
 
 ```
 USAGE
-  $ sfdx datadeploy:deploy [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel 
+  $ sfdx datadeploy:deploy [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel
   trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
 
 OPTIONS
-  -d, --deploydir=deploydir                                                         directory containing the deployment
+  -d, --deploydir=deploydir                                                         Directory containing the deployment
                                                                                     descriptor 'datadeploy.json'
                                                                                     (default: current working directory)
 
@@ -258,15 +273,15 @@ EXAMPLE
 
 ## `sfdx datadeploy:retrieve [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
-retrieve records from Salesforce to data files
+Retrieve records from Salesforce to data files
 
 ```
 USAGE
-  $ sfdx datadeploy:retrieve [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel 
+  $ sfdx datadeploy:retrieve [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel
   trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
 
 OPTIONS
-  -d, --deploydir=deploydir                                                         directory containing the deployment
+  -d, --deploydir=deploydir                                                         Directory containing the deployment
                                                                                     descriptor 'datadeploy.json'
                                                                                     (default: current working directory)
 
@@ -284,7 +299,29 @@ OPTIONS
 EXAMPLE
   $ sfdx datadeploy:retrieve --deploydir ./testdata --targetusername myOrg@example.com
 ```
+
 <!-- commandsstop -->
+
+# Version History
+
+- Release **2.1.0**
+  - NEW: Summary table after deployment or retrieval
+- Release **2.0.3**
+  - UPDATE: Dependencies updated to most recent versions
+- Release **2.0.2**
+  - NEW: System fields `LastActivityDate`, `LastViewedDate` and `LastReferencedDate` are excluded from retrieval
+  - NEW: Data of a record is printed when it fails to deploy
+  - UPDATE: Dependencies updated to most recent versions
+- Release **2.0.1**
+  - UPDATE: Dependencies updated to most recent versions
+- Release **2.0.0**
+  - NEW: Direct internal usage of Bulk API instead of using other CLI commands
+  - NEW: JSON format for data files
+  - NEW: Command to retrieve data from Salesforce
+- Release **1.0.2**
+  - FIX: #1 Incorrect default values for options displayed in CLI help
+- Release **1.0.0**
+  - Initial version
 
 # License
 

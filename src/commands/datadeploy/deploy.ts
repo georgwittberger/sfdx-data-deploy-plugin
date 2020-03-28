@@ -1,4 +1,4 @@
-import { flags, SfdxCommand } from '@salesforce/command';
+import { flags, SfdxCommand, SfdxResult } from '@salesforce/command';
 import { Messages, SfdxError } from '@salesforce/core';
 import * as fs from 'fs';
 import { readJsonSync } from 'fs-extra';
@@ -16,6 +16,20 @@ export default class DataDeployDeploy extends SfdxCommand {
   public static description = messages.getMessage('commandDescription');
 
   public static examples = ['$ sfdx datadeploy:deploy --deploydir ./testdata --targetusername myOrg@example.com'];
+
+  public static result: SfdxResult = {
+    tableColumnData: {
+      columns: [
+        { key: 'sObjectApiName', label: messages.getMessage('resultTableSObject') },
+        { key: 'operation', label: messages.getMessage('resultTableOperation') },
+        { key: 'dataFileName', label: messages.getMessage('resultTableDataFile') },
+        { key: 'deployedRecordsCount', label: messages.getMessage('resultTableRecords') }
+      ]
+    },
+    display() {
+      this.ux.table(((this.data as unknown) as DeploymentResult).jobResults, this.tableColumnData);
+    }
+  };
 
   protected static flagsConfig = {
     deploydir: flags.directory({
@@ -69,12 +83,15 @@ export default class DataDeployDeploy extends SfdxCommand {
         const connection = this.org.getConnection();
 
         let bulkJob: Job;
+        let bulkOperation: string;
         if (job.deployConfig.externalIdFieldApiName) {
-          bulkJob = connection.bulk.createJob(job.sObjectApiName, 'upsert', {
+          bulkOperation = 'upsert';
+          bulkJob = connection.bulk.createJob(job.sObjectApiName, bulkOperation, {
             extIdField: job.deployConfig.externalIdFieldApiName
           });
         } else {
-          bulkJob = connection.bulk.createJob(job.sObjectApiName, 'insert');
+          bulkOperation = 'insert';
+          bulkJob = connection.bulk.createJob(job.sObjectApiName, bulkOperation);
         }
 
         let bulkBatch = bulkJob.createBatch();
@@ -104,6 +121,7 @@ export default class DataDeployDeploy extends SfdxCommand {
         this.log(messages.getMessage('infoDeployDataSucceeded', [data.length, job.sObjectApiName]));
         deploymentResult.jobResults.push({
           sObjectApiName: job.sObjectApiName,
+          operation: bulkOperation,
           dataFileName: job.dataFileName,
           deployedRecordsCount: data.length
         });
@@ -136,6 +154,7 @@ export interface DeploymentResult {
  */
 export interface DeploymentJobResult {
   sObjectApiName: string;
+  operation: string;
   dataFileName: string;
   deployedRecordsCount: number;
 }
