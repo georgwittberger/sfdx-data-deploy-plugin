@@ -15,13 +15,14 @@ This [Salesforce CLI](https://developer.salesforce.com/tools/sfdxcli) plugin can
 ---
 
 <!-- toc -->
+
 - [SFDX Data Deploy Plugin](#sfdx-data-deploy-plugin)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Commands](#commands)
 - [Version History](#version-history)
 - [License](#license)
-<!-- tocstop -->
+  <!-- tocstop -->
 
 # Installation
 
@@ -76,12 +77,13 @@ The following example shows a basic job configuration for the Account object.
 
 For deployment of records from the data file to Salesforce there are some further configuration properties which can be declared as an object in the `deployConfig` property of the job configuration. The deployment properties are described in the following table.
 
-| Property                 | Type   | Description                                                                                                                                                                                                                                             |
-| ------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `externalIdFieldApiName` | string | _(optional)_ API name of the field containing the external ID. If present, the plugin creates an `upsert` job which is capable of updating existing records matching the values in the given field. If not present, the plugin creates an `insert` job. |
-| `maxWaitMinutes`         | number | _(optional)_ Maximum number of minutes to wait for completion of the job. If not present, defaults to 5 minutes.                                                                                                                                        |
+| Property                 | Type    | Description                                                                                                                                                                                                                                             |
+| ------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `externalIdFieldApiName` | string  | _(optional)_ API name of the field containing the external ID. If present, the plugin creates an `upsert` job which is capable of updating existing records matching the values in the given field. If not present, the plugin creates an `insert` job. |
+| `maxWaitMinutes`         | number  | _(optional)_ Maximum number of minutes to wait for completion of the job. If not present, defaults to 5 minutes.                                                                                                                                        |
+| `failOnError`            | boolean | _(optional)_ Defines if the whole deployment fails if at least one record failed to deploy. If not present, defaults to `true`.                                                                                                                         |
 
-The following example shows a deployment job configuration for the Account object, assuming that there is an external ID field named `AccountId__c`.
+The following example shows a deployment job configuration for the Account object, assuming that there is an external ID field named `AccountId__c`. Deployment would continue even if some records cannot be deployed.
 
 ```json
 {
@@ -89,7 +91,8 @@ The following example shows a deployment job configuration for the Account objec
   "dataFileName": "Account.json",
   "deployConfig": {
     "externalIdFieldApiName": "AccountId__c",
-    "maxWaitMinutes": 2
+    "maxWaitMinutes": 2,
+    "failOnError": false
   }
 }
 ```
@@ -304,8 +307,13 @@ EXAMPLE
 
 # Version History
 
+- Release **2.2.0**
+  - NEW: Job deployment configuration option `failOnError`
+  - UPDATE: Internal refactoring to move logic to separate modules
+  - FIX: Error message definition `errorDeploymentFileNotReadable` missing for `retrieve` command
 - Release **2.1.0**
   - NEW: Summary table after deployment or retrieval
+  - NEW: Icon prefixes for console log messages
 - Release **2.0.3**
   - UPDATE: Dependencies updated to most recent versions
 - Release **2.0.2**

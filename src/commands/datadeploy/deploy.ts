@@ -24,7 +24,8 @@ export default class DataDeployDeploy extends SfdxCommand {
         { key: 'sObjectApiName', label: messages.getMessage('resultTableSObject') },
         { key: 'operation', label: messages.getMessage('resultTableOperation') },
         { key: 'dataFileName', label: messages.getMessage('resultTableDataFile') },
-        { key: 'deployedRecordsCount', label: messages.getMessage('resultTableRecords') }
+        { key: 'deployedRecordsCount', label: messages.getMessage('resultTableDeployedRecords') },
+        { key: 'failedRecordsCount', label: messages.getMessage('resultTableFailedRecords') }
       ]
     },
     display() {
@@ -96,22 +97,41 @@ export default class DataDeployDeploy extends SfdxCommand {
           errorResults.forEach(({ result: { errors = [] }, record }) =>
             this.log(messages.getMessage('errorDeployRecordFailed', [JSON.stringify(record), errors.join(', ')]))
           );
-          throw new Error(messages.getMessage('errorDeploySomeRecordFailed'));
+          if (
+            !jobConfig.deployConfig ||
+            typeof jobConfig.deployConfig.failOnError === 'undefined' ||
+            jobConfig.deployConfig.failOnError
+          ) {
+            throw new Error(messages.getMessage('errorDeploySomeRecordFailed'));
+          }
+          this.log(
+            messages.getMessage('infoDeployDataPartiallyFailed', [
+              successResults.length,
+              jobConfig.sObjectApiName,
+              errorResults.length
+            ])
+          );
+        } else {
+          this.log(messages.getMessage('infoDeployDataSucceeded', [successResults.length, jobConfig.sObjectApiName]));
         }
 
-        this.log(messages.getMessage('infoDeployDataSucceeded', [successResults.length, jobConfig.sObjectApiName]));
         deploymentResult.jobResults.push({
           sObjectApiName: jobConfig.sObjectApiName,
           operation,
           dataFileName: jobConfig.dataFileName,
-          deployedRecordsCount: successResults.length
+          deployedRecordsCount: successResults.length,
+          failedRecordsCount: errorResults.length
         });
       } catch (error) {
         throw new SfdxError(messages.getMessage('errorDeployDataFailed', [jobConfig.sObjectApiName, error.message]));
       }
     }
 
-    this.log(messages.getMessage('infoDeploymentCompleted', [deploymentDirectory]));
+    if (deploymentResult.jobResults.some(({ failedRecordsCount }) => failedRecordsCount > 0)) {
+      this.log(messages.getMessage('infoDeploymentPartiallyFailed', [deploymentDirectory]));
+    } else {
+      this.log(messages.getMessage('infoDeploymentCompleted', [deploymentDirectory]));
+    }
     return deploymentResult;
   }
 }
@@ -132,4 +152,5 @@ export interface DeploymentJobResult {
   operation: string;
   dataFileName: string;
   deployedRecordsCount: number;
+  failedRecordsCount: number;
 }

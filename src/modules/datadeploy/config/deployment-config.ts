@@ -12,6 +12,7 @@ export interface JobConfig {
 export interface JobDeployConfig {
   externalIdFieldApiName?: string;
   maxWaitMinutes?: number;
+  failOnError?: boolean;
 }
 
 export interface JobRetrieveConfig {
