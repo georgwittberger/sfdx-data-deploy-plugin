@@ -2,9 +2,10 @@ import { flags, SfdxCommand, SfdxResult } from '@salesforce/command';
 import { Messages, SfdxError } from '@salesforce/core';
 import * as fs from 'fs';
 import { readJsonSync } from 'fs-extra';
-import { BatchInfo, ErrorResult, Job, RecordResult } from 'jsforce';
 import * as path from 'path';
-import { DeploymentConfig } from '../../config/deployment-config';
+import { getAbsolutePath } from '../../modules/datadeploy/config/core';
+import { DeploymentConfig } from '../../modules/datadeploy/config/deployment-config';
+import { createJob, createSingleBatch, getBatchResult } from '../../modules/datadeploy/deploy/core';
 
 Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('sfdx-data-deploy-plugin', 'datadeploy-deploy');
@@ -42,7 +43,7 @@ export default class DataDeployDeploy extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<DeploymentResult> {
-    const deploymentDirectory = this.getDeploymentDirectory();
+    const deploymentDirectory = getAbsolutePath(this.flags.deploydir);
     this.log(messages.getMessage('infoDeploymentDirectory', [deploymentDirectory]));
 
     const deploymentFile = path.resolve(deploymentDirectory, 'datadeploy.json');
@@ -60,57 +61,37 @@ export default class DataDeployDeploy extends SfdxCommand {
       jobResults: []
     };
 
-    for (const job of deploymentConfig.jobs) {
-      const dataFile = path.resolve(deploymentDirectory, job.dataFileName);
+    for (const jobConfig of deploymentConfig.jobs) {
+      const dataFile = path.resolve(deploymentDirectory, jobConfig.dataFileName);
       if (!fs.existsSync(dataFile)) {
-        throw new SfdxError(messages.getMessage('errorDataFileNotFound', [job.sObjectApiName, dataFile]));
+        throw new SfdxError(messages.getMessage('errorDataFileNotFound', [jobConfig.sObjectApiName, dataFile]));
       }
 
       let data: unknown[];
       try {
         data = readJsonSync(dataFile) as unknown[];
       } catch (error) {
-        throw new SfdxError(messages.getMessage('errorDataFileNotReadable', [job.sObjectApiName, error.message]));
+        throw new SfdxError(messages.getMessage('errorDataFileNotReadable', [jobConfig.sObjectApiName, error.message]));
       }
 
-      const waitMinutes = job.deployConfig && job.deployConfig.maxWaitMinutes ? job.deployConfig.maxWaitMinutes : 5;
+      const waitMinutes =
+        jobConfig.deployConfig && jobConfig.deployConfig.maxWaitMinutes ? jobConfig.deployConfig.maxWaitMinutes : 5;
 
       try {
         this.log(
-          messages.getMessage('infoDeployingRecordsFromFile', [data.length, job.sObjectApiName, dataFile, waitMinutes])
+          messages.getMessage('infoDeployingRecordsFromFile', [
+            data.length,
+            jobConfig.sObjectApiName,
+            dataFile,
+            waitMinutes
+          ])
         );
 
         const connection = this.org.getConnection();
+        const { job, operation } = createJob(connection, jobConfig);
+        const batchInfo = await createSingleBatch(job, data);
+        const { successResults, errorResults } = await getBatchResult(connection, batchInfo, data, waitMinutes);
 
-        let bulkJob: Job;
-        let bulkOperation: string;
-        if (job.deployConfig.externalIdFieldApiName) {
-          bulkOperation = 'upsert';
-          bulkJob = connection.bulk.createJob(job.sObjectApiName, bulkOperation, {
-            extIdField: job.deployConfig.externalIdFieldApiName
-          });
-        } else {
-          bulkOperation = 'insert';
-          bulkJob = connection.bulk.createJob(job.sObjectApiName, bulkOperation);
-        }
-
-        let bulkBatch = bulkJob.createBatch();
-        bulkBatch.execute(data);
-        const { id: batchId, jobId } = await new Promise<BatchInfo>(resolve => {
-          bulkBatch.on('queue', (batchInfo: BatchInfo) => resolve(batchInfo));
-        });
-
-        bulkJob = connection.bulk.job(jobId);
-        bulkBatch = bulkJob.batch(batchId);
-        bulkBatch.poll(5000, waitMinutes * 60 * 1000);
-
-        const bulkBatchResult = await new Promise<BatchRecordResult[]>(resolve => {
-          bulkBatch.on('response', (recordResults: RecordResult[]) => {
-            resolve(recordResults.map((result, index) => ({ result, record: data[index] })));
-          });
-        });
-
-        const errorResults = bulkBatchResult.filter(({ result: { success } }) => !success) as BatchRecordErrorResult[];
         if (errorResults.length > 0) {
           errorResults.forEach(({ result: { errors = [] }, record }) =>
             this.log(messages.getMessage('errorDeployRecordFailed', [JSON.stringify(record), errors.join(', ')]))
@@ -118,26 +99,20 @@ export default class DataDeployDeploy extends SfdxCommand {
           throw new Error(messages.getMessage('errorDeploySomeRecordFailed'));
         }
 
-        this.log(messages.getMessage('infoDeployDataSucceeded', [data.length, job.sObjectApiName]));
+        this.log(messages.getMessage('infoDeployDataSucceeded', [successResults.length, jobConfig.sObjectApiName]));
         deploymentResult.jobResults.push({
-          sObjectApiName: job.sObjectApiName,
-          operation: bulkOperation,
-          dataFileName: job.dataFileName,
-          deployedRecordsCount: data.length
+          sObjectApiName: jobConfig.sObjectApiName,
+          operation,
+          dataFileName: jobConfig.dataFileName,
+          deployedRecordsCount: successResults.length
         });
       } catch (error) {
-        throw new SfdxError(messages.getMessage('errorDeployDataFailed', [job.sObjectApiName, error.message]));
+        throw new SfdxError(messages.getMessage('errorDeployDataFailed', [jobConfig.sObjectApiName, error.message]));
       }
     }
 
     this.log(messages.getMessage('infoDeploymentCompleted', [deploymentDirectory]));
     return deploymentResult;
-  }
-
-  private getDeploymentDirectory(): string {
-    return this.flags.deploydir && path.isAbsolute(this.flags.deploydir)
-      ? this.flags.deploydir
-      : path.resolve(process.cwd(), this.flags.deploydir || '');
   }
 }
 
@@ -157,20 +132,4 @@ export interface DeploymentJobResult {
   operation: string;
   dataFileName: string;
   deployedRecordsCount: number;
-}
-
-/**
- * Result of the deployment of a single record.
- */
-interface BatchRecordResult {
-  result: RecordResult;
-  record: unknown;
-}
-
-/**
- * Error result of the deployment of a single record.
- */
-interface BatchRecordErrorResult {
-  result: ErrorResult;
-  record: unknown;
 }

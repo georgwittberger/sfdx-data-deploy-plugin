@@ -9,5 +9,6 @@
   "resultTableSObject": "sObject",
   "resultTableDataFile": "Data File",
   "resultTableRecords": "Records",
+  "errorDeploymentFileNotReadable": "✕ Deployment descriptor '%s' is not readable.",
   "errorRetrieveDataFailed": "✕ Failed to retrieve records for sObject '%s'. Error: %s"
 }
