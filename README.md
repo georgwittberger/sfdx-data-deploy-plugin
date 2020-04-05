@@ -22,7 +22,7 @@ This [Salesforce CLI](https://developer.salesforce.com/tools/sfdxcli) plugin can
 - [Commands](#commands)
 - [Version History](#version-history)
 - [License](#license)
-  <!-- tocstop -->
+<!-- tocstop -->
 
 # Installation
 
@@ -176,6 +176,12 @@ The plugin requires a connection to a Salesforce org in order to deploy records 
 
 TIP: If the deployment descriptor is in the current working directory you can omit the `-d` flag.
 
+The plugin runs the deployment for all jobs defined the deployment descriptor by default. Use the command line options `-i` or `-x` followed by a comma-separated list of data file names to specify which jobs to include or exclude from deployment. The given file names are matched against the `dataFileName` properties in the job configurations.
+
+```bash
+sfdx datadeploy:deploy -d testdata -i IncludedFile1.json,IncludedFile2.json -u yourname@yourorg.com
+```
+
 ## Retrieving Data from Salesforce
 
 The plugin requires a connection to a Salesforce org in order to retrieve records to data files. Once the deployment descriptor has been prepared with the proper retrieval configuration follow these steps to retrieve records.
@@ -188,6 +194,12 @@ The plugin requires a connection to a Salesforce org in order to retrieve record
    ```
 
 TIP: If the deployment descriptor is in the current working directory you can omit the `-d` flag.
+
+The plugin runs the retrieval for all jobs defined the deployment descriptor by default. Use the command line options `-i` or `-x` followed by a comma-separated list of data file names to specify which jobs to include or exclude from retrieval. The given file names are matched against the `dataFileName` properties in the job configurations.
+
+```bash
+sfdx datadeploy:retrieve -d testdata -i IncludedFile1.json,IncludedFile2.json -u yourname@yourorg.com
+```
 
 ## Tips and Examples
 
@@ -242,25 +254,30 @@ See the subdirectory `data` in this Git repository for an example.
 
 <!-- commands -->
 
-- [`sfdx datadeploy:deploy [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-datadeploydeploy--d-directory--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
-- [`sfdx datadeploy:retrieve [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-datadeployretrieve--d-directory--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
+- [`sfdx datadeploy:deploy [-d <directory>] [-i <array>] [-x <array>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-datadeploydeploy--d-directory--i-array--x-array--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
+- [`sfdx datadeploy:retrieve [-d <directory>] [-i <array>] [-x <array>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-datadeployretrieve--d-directory--i-array--x-array--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 
-## `sfdx datadeploy:deploy [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
+## `sfdx datadeploy:deploy [-d <directory>] [-i <array>] [-x <array>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
 Deploy records from data files to Salesforce
 
 ```
 USAGE
-  $ sfdx datadeploy:deploy [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel
-  trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
+  $ sfdx datadeploy:deploy [-d <directory>] [-i <array>] [-x <array>] [-u <string>] [--apiversion <string>] [--json]
+  [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
 
 OPTIONS
   -d, --deploydir=deploydir                                                         Directory containing the deployment
                                                                                     descriptor 'datadeploy.json'
                                                                                     (default: current working directory)
 
+  -i, --include=include                                                             Include only the given list of file
+                                                                                    names
+
   -u, --targetusername=targetusername                                               username or alias for the target
                                                                                     org; overrides default target org
+
+  -x, --exclude=exclude                                                             Exclude the given list of file names
 
   --apiversion=apiversion                                                           override the api version used for
                                                                                     api requests made by this command
@@ -270,26 +287,32 @@ OPTIONS
   --loglevel=(trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL)  [default: warn] logging level for
                                                                                     this command invocation
 
-EXAMPLE
+EXAMPLES
   $ sfdx datadeploy:deploy --deploydir ./testdata --targetusername myOrg@example.com
+  $ sfdx datadeploy:deploy --deploydir ./testdata --include Account.json,Contact.json --targetusername myOrg@example.com
 ```
 
-## `sfdx datadeploy:retrieve [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
+## `sfdx datadeploy:retrieve [-d <directory>] [-i <array>] [-x <array>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
 Retrieve records from Salesforce to data files
 
 ```
 USAGE
-  $ sfdx datadeploy:retrieve [-d <directory>] [-u <string>] [--apiversion <string>] [--json] [--loglevel
-  trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
+  $ sfdx datadeploy:retrieve [-d <directory>] [-i <array>] [-x <array>] [-u <string>] [--apiversion <string>] [--json]
+  [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
 
 OPTIONS
   -d, --deploydir=deploydir                                                         Directory containing the deployment
                                                                                     descriptor 'datadeploy.json'
                                                                                     (default: current working directory)
 
+  -i, --include=include                                                             Include only the given list of file
+                                                                                    names
+
   -u, --targetusername=targetusername                                               username or alias for the target
                                                                                     org; overrides default target org
+
+  -x, --exclude=exclude                                                             Exclude the given list of file names
 
   --apiversion=apiversion                                                           override the api version used for
                                                                                     api requests made by this command
@@ -299,14 +322,18 @@ OPTIONS
   --loglevel=(trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL)  [default: warn] logging level for
                                                                                     this command invocation
 
-EXAMPLE
+EXAMPLES
   $ sfdx datadeploy:retrieve --deploydir ./testdata --targetusername myOrg@example.com
+  $ sfdx datadeploy:retrieve --deploydir ./testdata --include Account.json,Contact.json --targetusername
+  myOrg@example.com
 ```
 
 <!-- commandsstop -->
 
 # Version History
 
+- Release **2.3.0**
+  - NEW: Command line options `--include` and `--exclude` to define which jobs to include or exclude from deployment or retrieval
 - Release **2.2.0**
   - NEW: Job deployment configuration option `failOnError`
   - UPDATE: Internal refactoring to move logic to separate modules

@@ -16,7 +16,10 @@ const messages = Messages.loadMessages('sfdx-data-deploy-plugin', 'datadeploy-de
 export default class DataDeployDeploy extends SfdxCommand {
   public static description = messages.getMessage('commandDescription');
 
-  public static examples = ['$ sfdx datadeploy:deploy --deploydir ./testdata --targetusername myOrg@example.com'];
+  public static examples = [
+    '$ sfdx datadeploy:deploy --deploydir ./testdata --targetusername myOrg@example.com',
+    '$ sfdx datadeploy:deploy --deploydir ./testdata --include Account.json,Contact.json --targetusername myOrg@example.com'
+  ];
 
   public static result: SfdxResult = {
     tableColumnData: {
@@ -37,6 +40,14 @@ export default class DataDeployDeploy extends SfdxCommand {
     deploydir: flags.directory({
       char: 'd',
       description: messages.getMessage('deploydirFlagDescription')
+    }),
+    include: flags.array({
+      char: 'i',
+      description: messages.getMessage('includeFlagDescription')
+    }),
+    exclude: flags.array({
+      char: 'x',
+      description: messages.getMessage('excludeFlagDescription')
     })
   };
 
@@ -63,6 +74,21 @@ export default class DataDeployDeploy extends SfdxCommand {
     };
 
     for (const jobConfig of deploymentConfig.jobs) {
+      if (
+        (this.flags.include && this.flags.include.length > 0 && !this.flags.include.includes(jobConfig.dataFileName)) ||
+        (this.flags.exclude && this.flags.exclude.length > 0 && this.flags.exclude.includes(jobConfig.dataFileName))
+      ) {
+        this.log(messages.getMessage('infoSkippingFile', [jobConfig.dataFileName]));
+        deploymentResult.jobResults.push({
+          sObjectApiName: jobConfig.sObjectApiName,
+          operation: 'skipped',
+          dataFileName: jobConfig.dataFileName,
+          deployedRecordsCount: 0,
+          failedRecordsCount: 0
+        });
+        continue;
+      }
+
       const dataFile = path.resolve(deploymentDirectory, jobConfig.dataFileName);
       if (!fs.existsSync(dataFile)) {
         throw new SfdxError(messages.getMessage('errorDataFileNotFound', [jobConfig.sObjectApiName, dataFile]));
