@@ -32,7 +32,7 @@ export default function retrieveData(connection: Connection, config: JobConfig):
     if (config.retrieveConfig && config.retrieveConfig.maxRecordCount) {
       query.limit(config.retrieveConfig.maxRecordCount);
     }
-    query.execute({}, (error: Error, records: unknown[]) => {
+    query.execute({ autoFetch: true }, (error: Error, records: unknown[]) => {
       if (error) {
         reject(error);
       } else {

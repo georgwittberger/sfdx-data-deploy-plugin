@@ -109,7 +109,7 @@ For retrieval of records from Salesforce to the data file there are some further
 | `excludeFieldApiNames` | string[] | _(optional)_ API names of fields to exclude when retrieving all fields.                                                                 |
 | `filterCriteria`       | object   | _(optional)_ Criteria to select specific records to retrieve. See filtering explanation below. If not present, retrieves all records.   |
 | `sortFieldApiNames`    | string[] | _(optional)_ API names of fields to sort the records. See sorting explanation below.                                                    |
-| `maxRecordCount`       | number   | _(optional)_ Maximum number of records to retrieve. If not present, result size depends on Salesforce limits.                           |
+| `maxRecordCount`       | number   | _(optional)_ Maximum number of records to retrieve. If not present, maximum is 10,000 records.                                          |
 
 The following example shows a retrieval job configuration for the Account object, assuming there is the custom field `AccountId__c`. It retrieves only records where the `Name` begins with "Demo ", fetches only the `Name` and `AccountId__c` fields and sorts the results by `Name` in ascending order.
 
@@ -332,6 +332,8 @@ EXAMPLES
 
 # Version History
 
+- Release **2.3.1**
+  - FIX: #3 retrieveConfig.maxRecordCount is limited to 500
 - Release **2.3.0**
   - NEW: Command line options `--include` and `--exclude` to define which jobs to include or exclude from deployment or retrieval
 - Release **2.2.0**
