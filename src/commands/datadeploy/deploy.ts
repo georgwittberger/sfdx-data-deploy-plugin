@@ -105,6 +105,12 @@ export default class DataDeployDeploy extends SfdxCommand {
           throw new Error(messages.getMessage('errorDataFileNotReadable', [jobConfig.sObjectApiName, error.message]));
         }
 
+        if (data.length < 1) {
+          jobResult.operation = 'skipped';
+          this.log(messages.getMessage('infoSkippingEmptyFile', [jobConfig.dataFileName]));
+          continue;
+        }
+
         jobResult.failedRecordsCount = data.length;
 
         const waitMinutes =

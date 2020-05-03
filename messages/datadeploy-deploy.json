@@ -6,6 +6,7 @@
   "infoDeploymentDirectory": "🛈 Deploying data from directory: %s",
   "infoDeploymentFile": "🛈 Using deployment descriptor: %s",
   "infoSkippingFile": "🛈 Skipping job for file '%s'",
+  "infoSkippingEmptyFile": "🛈 Skipping job for file '%s' because it does not contain any records.",
   "infoDeployingRecordsFromFile": "→ Deploying %s records for sObject '%s' from file '%s' waiting at most %s minutes",
   "infoDeployDataSucceeded": "✓ %s records for sObject '%s' successfully deployed.",
   "infoDeployDataFailed": "⚠ Failed to deploy records for sObject '%s'. Error: %s",
