@@ -8,7 +8,7 @@
   "infoSkippingFile": "🛈 Skipping job for file '%s'",
   "infoDeployingRecordsFromFile": "→ Deploying %s records for sObject '%s' from file '%s' waiting at most %s minutes",
   "infoDeployDataSucceeded": "✓ %s records for sObject '%s' successfully deployed.",
-  "infoDeployDataPartiallyFailed": "⚠ Only %s records for sObject '%s' successfully deployed. %s records failed with error.",
+  "infoDeployDataFailed": "⚠ Failed to deploy records for sObject '%s'. Error: %s",
   "infoDeploymentCompleted": "✓ Deployment from directory '%s' successfully completed.\n",
   "infoDeploymentPartiallyFailed": "⚠ Deployment from directory '%s' completed with errors.\n",
   "resultTableSObject": "sObject",
@@ -16,10 +16,10 @@
   "resultTableDataFile": "Data File",
   "resultTableDeployedRecords": "Deployed Records",
   "resultTableFailedRecords": "Failed Records",
-  "errorDataFileNotFound": "✕ Data file for sObject '%s' not found: %s",
+  "errorDataFileNotFound": "Data file for sObject '%s' not found: %s",
   "errorDeploymentFileNotReadable": "✕ Deployment descriptor '%s' is not readable.",
-  "errorDataFileNotReadable": "✕ Data file for sObject '%s' is not readable. Error: %s",
+  "errorDataFileNotReadable": "Data file for sObject '%s' is not readable. Error: %s",
   "errorDeployRecordFailed": "✕ Deployment of record failed.\n  Record: %s\n  Errors: %s",
-  "errorDeploySomeRecordFailed": "✕ At least one record was not deployed.",
+  "errorDeployDataPartiallyFailed": "Deployment of %s records failed.",
   "errorDeployDataFailed": "✕ Failed to deploy records for sObject '%s'. Error: %s"
 }

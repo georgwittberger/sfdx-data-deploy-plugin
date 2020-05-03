@@ -9,9 +9,11 @@ import { BatchInfo } from './batch-info';
  * @returns {Promise<BatchInfo>} Promise which resolves once the batch has been queued.
  */
 export default function createSingleBatch(job: Job, data: unknown[]): Promise<BatchInfo> {
-  const batch = job.createBatch();
-  batch.execute(data);
-  return new Promise<BatchInfo>(resolve => {
+  return new Promise<BatchInfo>((resolve, reject) => {
+    const batch = job.createBatch();
+    batch.execute(data);
+    job.on('error', error => reject(error));
+    batch.on('error', error => reject(error));
     batch.on('queue', (batchInfo: JsForceBatchInfo) =>
       resolve({ jobId: batchInfo.jobId, batchId: batchInfo.id, state: batchInfo.state })
     );

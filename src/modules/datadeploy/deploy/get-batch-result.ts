@@ -21,7 +21,8 @@ export default function getBatchResult(
   const job = connection.bulk.job(batchInfo.jobId);
   const batch = job.batch(batchInfo.batchId);
   batch.poll(5000, waitMinutes * 60 * 1000);
-  return new Promise<BatchResult>(resolve => {
+  return new Promise<BatchResult>((resolve, reject) => {
+    batch.on('error', error => reject(error));
     batch.on('response', (results: RecordResult[]) => {
       const recordResults: BatchRecordResult[] = results.map((result, index) => ({ result, record: data[index] }));
       const successResults = recordResults.filter(({ result }) => result.success) as BatchRecordSuccessResult[];

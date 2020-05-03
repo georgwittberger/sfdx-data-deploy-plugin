@@ -74,37 +74,42 @@ export default class DataDeployDeploy extends SfdxCommand {
     };
 
     for (const jobConfig of deploymentConfig.jobs) {
+      const jobResult = {
+        sObjectApiName: jobConfig.sObjectApiName,
+        operation: '',
+        dataFileName: jobConfig.dataFileName,
+        deployedRecordsCount: 0,
+        failedRecordsCount: 0
+      };
+      deploymentResult.jobResults.push(jobResult);
+
       if (
         (this.flags.include && this.flags.include.length > 0 && !this.flags.include.includes(jobConfig.dataFileName)) ||
         (this.flags.exclude && this.flags.exclude.length > 0 && this.flags.exclude.includes(jobConfig.dataFileName))
       ) {
+        jobResult.operation = 'skipped';
         this.log(messages.getMessage('infoSkippingFile', [jobConfig.dataFileName]));
-        deploymentResult.jobResults.push({
-          sObjectApiName: jobConfig.sObjectApiName,
-          operation: 'skipped',
-          dataFileName: jobConfig.dataFileName,
-          deployedRecordsCount: 0,
-          failedRecordsCount: 0
-        });
         continue;
       }
 
-      const dataFile = path.resolve(deploymentDirectory, jobConfig.dataFileName);
-      if (!fs.existsSync(dataFile)) {
-        throw new SfdxError(messages.getMessage('errorDataFileNotFound', [jobConfig.sObjectApiName, dataFile]));
-      }
-
-      let data: unknown[];
       try {
-        data = readJsonSync(dataFile) as unknown[];
-      } catch (error) {
-        throw new SfdxError(messages.getMessage('errorDataFileNotReadable', [jobConfig.sObjectApiName, error.message]));
-      }
+        const dataFile = path.resolve(deploymentDirectory, jobConfig.dataFileName);
+        if (!fs.existsSync(dataFile)) {
+          throw new Error(messages.getMessage('errorDataFileNotFound', [jobConfig.sObjectApiName, dataFile]));
+        }
 
-      const waitMinutes =
-        jobConfig.deployConfig && jobConfig.deployConfig.maxWaitMinutes ? jobConfig.deployConfig.maxWaitMinutes : 5;
+        let data: unknown[];
+        try {
+          data = readJsonSync(dataFile) as unknown[];
+        } catch (error) {
+          throw new Error(messages.getMessage('errorDataFileNotReadable', [jobConfig.sObjectApiName, error.message]));
+        }
 
-      try {
+        jobResult.failedRecordsCount = data.length;
+
+        const waitMinutes =
+          jobConfig.deployConfig && jobConfig.deployConfig.maxWaitMinutes ? jobConfig.deployConfig.maxWaitMinutes : 5;
+
         this.log(
           messages.getMessage('infoDeployingRecordsFromFile', [
             data.length,
@@ -116,40 +121,32 @@ export default class DataDeployDeploy extends SfdxCommand {
 
         const connection = this.org.getConnection();
         const { job, operation } = createJob(connection, jobConfig);
+
+        jobResult.operation = operation;
+
         const batchInfo = await createSingleBatch(job, data);
         const { successResults, errorResults } = await getBatchResult(connection, batchInfo, data, waitMinutes);
+
+        jobResult.deployedRecordsCount = successResults.length;
+        jobResult.failedRecordsCount = errorResults.length;
 
         if (errorResults.length > 0) {
           errorResults.forEach(({ result: { errors = [] }, record }) =>
             this.log(messages.getMessage('errorDeployRecordFailed', [JSON.stringify(record), errors.join(', ')]))
           );
-          if (
-            !jobConfig.deployConfig ||
-            typeof jobConfig.deployConfig.failOnError === 'undefined' ||
-            jobConfig.deployConfig.failOnError
-          ) {
-            throw new Error(messages.getMessage('errorDeploySomeRecordFailed'));
-          }
-          this.log(
-            messages.getMessage('infoDeployDataPartiallyFailed', [
-              successResults.length,
-              jobConfig.sObjectApiName,
-              errorResults.length
-            ])
-          );
+          throw new Error(messages.getMessage('errorDeployDataPartiallyFailed', [errorResults.length]));
         } else {
           this.log(messages.getMessage('infoDeployDataSucceeded', [successResults.length, jobConfig.sObjectApiName]));
         }
-
-        deploymentResult.jobResults.push({
-          sObjectApiName: jobConfig.sObjectApiName,
-          operation,
-          dataFileName: jobConfig.dataFileName,
-          deployedRecordsCount: successResults.length,
-          failedRecordsCount: errorResults.length
-        });
       } catch (error) {
-        throw new SfdxError(messages.getMessage('errorDeployDataFailed', [jobConfig.sObjectApiName, error.message]));
+        if (
+          !jobConfig.deployConfig ||
+          typeof jobConfig.deployConfig.failOnError === 'undefined' ||
+          jobConfig.deployConfig.failOnError
+        ) {
+          throw new SfdxError(messages.getMessage('errorDeployDataFailed', [jobConfig.sObjectApiName, error.message]));
+        }
+        this.log(messages.getMessage('infoDeployDataFailed', [jobConfig.sObjectApiName, error.message]));
       }
     }
 
