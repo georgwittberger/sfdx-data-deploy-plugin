@@ -19,6 +19,7 @@ This [Salesforce CLI](https://developer.salesforce.com/tools/sfdxcli) plugin can
 - [SFDX Data Deploy Plugin](#sfdx-data-deploy-plugin)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Known Issues](#known-issues)
 - [Commands](#commands)
 - [Version History](#version-history)
 - [License](#license)
@@ -81,9 +82,9 @@ For deployment of records from the data file to Salesforce there are some furthe
 | ------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `externalIdFieldApiName` | string  | _(optional)_ API name of the field containing the external ID. If present, the plugin creates an `upsert` job which is capable of updating existing records matching the values in the given field. If not present, the plugin creates an `insert` job. |
 | `maxWaitMinutes`         | number  | _(optional)_ Maximum number of minutes to wait for completion of the job. If not present, defaults to 5 minutes.                                                                                                                                        |
-| `failOnError`            | boolean | _(optional)_ Defines if the whole deployment fails if at least one record failed to deploy. If not present, defaults to `true`.                                                                                                                         |
+| `failOnError`            | boolean | _(optional)_ Defines if the whole deployment fails if some error occurred for this job. If not present, defaults to `true`.                                                                                                                             |
 
-The following example shows a deployment job configuration for the Account object, assuming that there is an external ID field named `AccountId__c`. Deployment would continue even if some records cannot be deployed.
+The following example shows a deployment job configuration for the Account object, assuming that there is an external ID field named `AccountId__c`. Deployment would continue even if some error occurred in the job (e.g. invalid external ID field or some records failing to deploy).
 
 ```json
 {
@@ -97,7 +98,7 @@ The following example shows a deployment job configuration for the Account objec
 }
 ```
 
-Data is deployed using the [Salesforce Bulk API](https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/). The plugin checks the results of each Bulk API job before continuing with the next one. The deployment fails with an error if at least one record could not be deployed properly. Note that in this case some records may still have been deployed because the Bulk API does not roll back the whole job.
+Data is deployed using the [Salesforce Bulk API](https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/). The plugin checks the results of each Bulk API job before continuing with the next one. By default, the deployment fails with an error if at least one record could not be deployed properly. Note that in this case some records from this job and all previous jobs may still have been deployed because the Bulk API is not transactional.
 
 ## Creating a Retrieval Job Configuration
 
@@ -250,6 +251,20 @@ If you want to retrieve all fields but still include further lookup relationship
 
 See the subdirectory `data` in this Git repository for an example.
 
+# Known Issues
+
+## Setting NULL for custom lookup relationship does not work
+
+Assuming that an object has a custom lookup relationship to another custom object (not a standard object) then using the data deployment to remove an existing relation to another record will not work. Pay attention to `null` values in relationship fields as in the following example.
+
+```json
+{
+  "OtherObject__c": null
+}
+```
+
+Records with existing relations in the target org will still have their relation after deployment. This is an issue in the JSforce library, see <https://github.com/jsforce/jsforce/issues/943>
+
 # Commands
 
 <!-- commands -->
@@ -332,6 +347,9 @@ EXAMPLES
 
 # Version History
 
+- Release **2.3.2**
+  - FIX: #4 Import will abort with no message when wrong externalId is set in deployment descriptor
+  - FIX: #5 Import will abort with no message when import file is empty
 - Release **2.3.1**
   - FIX: #3 retrieveConfig.maxRecordCount is limited to 500
 - Release **2.3.0**
