@@ -347,6 +347,8 @@ EXAMPLES
 
 # Version History
 
+- Release **2.3.3**
+  - FIX: #6 Jenkins deployment fails because of json output
 - Release **2.3.2**
   - FIX: #4 Import will abort with no message when wrong externalId is set in deployment descriptor
   - FIX: #5 Import will abort with no message when import file is empty
