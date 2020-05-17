@@ -54,10 +54,10 @@ export default class DataDeployRetrieve extends SfdxCommand {
 
   public async run(): Promise<RetrievalResult> {
     const deploymentDirectory = getAbsolutePath(this.flags.deploydir);
-    this.log(messages.getMessage('infoDeploymentDirectory', [deploymentDirectory]));
+    this.ux.log(messages.getMessage('infoDeploymentDirectory', [deploymentDirectory]));
 
     const deploymentFile = path.resolve(deploymentDirectory, 'datadeploy.json');
-    this.log(messages.getMessage('infoDeploymentFile', [deploymentFile]));
+    this.ux.log(messages.getMessage('infoDeploymentFile', [deploymentFile]));
 
     let deploymentConfig: DeploymentConfig;
     try {
@@ -76,7 +76,7 @@ export default class DataDeployRetrieve extends SfdxCommand {
         (this.flags.include && this.flags.include.length > 0 && !this.flags.include.includes(jobConfig.dataFileName)) ||
         (this.flags.exclude && this.flags.exclude.length > 0 && this.flags.exclude.includes(jobConfig.dataFileName))
       ) {
-        this.log(messages.getMessage('infoSkippingFile', [jobConfig.dataFileName]));
+        this.ux.log(messages.getMessage('infoSkippingFile', [jobConfig.dataFileName]));
         retrievalResult.jobResults.push({
           sObjectApiName: jobConfig.sObjectApiName,
           status: 'skipped',
@@ -89,13 +89,13 @@ export default class DataDeployRetrieve extends SfdxCommand {
       const dataFile = path.resolve(deploymentDirectory, jobConfig.dataFileName);
 
       try {
-        this.log(messages.getMessage('infoRetrievingRecordsToFile', [jobConfig.sObjectApiName, dataFile]));
+        this.ux.log(messages.getMessage('infoRetrievingRecordsToFile', [jobConfig.sObjectApiName, dataFile]));
 
         const connection = this.org.getConnection();
         const data = await retrieveData(connection, jobConfig);
         writeJsonSync(dataFile, data, { spaces: 2 });
 
-        this.log(messages.getMessage('infoRetrieveDataSucceeded', [data.length, jobConfig.sObjectApiName]));
+        this.ux.log(messages.getMessage('infoRetrieveDataSucceeded', [data.length, jobConfig.sObjectApiName]));
         retrievalResult.jobResults.push({
           sObjectApiName: jobConfig.sObjectApiName,
           status: 'success',
@@ -107,7 +107,7 @@ export default class DataDeployRetrieve extends SfdxCommand {
       }
     }
 
-    this.log(messages.getMessage('infoRetrievalCompleted', [deploymentDirectory]));
+    this.ux.log(messages.getMessage('infoRetrievalCompleted', [deploymentDirectory]));
     return retrievalResult;
   }
 }

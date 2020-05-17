@@ -56,10 +56,10 @@ export default class DataDeployDeploy extends SfdxCommand {
 
   public async run(): Promise<DeploymentResult> {
     const deploymentDirectory = getAbsolutePath(this.flags.deploydir);
-    this.log(messages.getMessage('infoDeploymentDirectory', [deploymentDirectory]));
+    this.ux.log(messages.getMessage('infoDeploymentDirectory', [deploymentDirectory]));
 
     const deploymentFile = path.resolve(deploymentDirectory, 'datadeploy.json');
-    this.log(messages.getMessage('infoDeploymentFile', [deploymentFile]));
+    this.ux.log(messages.getMessage('infoDeploymentFile', [deploymentFile]));
 
     let deploymentConfig: DeploymentConfig;
     try {
@@ -88,7 +88,7 @@ export default class DataDeployDeploy extends SfdxCommand {
         (this.flags.exclude && this.flags.exclude.length > 0 && this.flags.exclude.includes(jobConfig.dataFileName))
       ) {
         jobResult.operation = 'skipped';
-        this.log(messages.getMessage('infoSkippingFile', [jobConfig.dataFileName]));
+        this.ux.log(messages.getMessage('infoSkippingFile', [jobConfig.dataFileName]));
         continue;
       }
 
@@ -107,7 +107,7 @@ export default class DataDeployDeploy extends SfdxCommand {
 
         if (data.length < 1) {
           jobResult.operation = 'skipped';
-          this.log(messages.getMessage('infoSkippingEmptyFile', [jobConfig.dataFileName]));
+          this.ux.log(messages.getMessage('infoSkippingEmptyFile', [jobConfig.dataFileName]));
           continue;
         }
 
@@ -116,7 +116,7 @@ export default class DataDeployDeploy extends SfdxCommand {
         const waitMinutes =
           jobConfig.deployConfig && jobConfig.deployConfig.maxWaitMinutes ? jobConfig.deployConfig.maxWaitMinutes : 5;
 
-        this.log(
+        this.ux.log(
           messages.getMessage('infoDeployingRecordsFromFile', [
             data.length,
             jobConfig.sObjectApiName,
@@ -138,11 +138,13 @@ export default class DataDeployDeploy extends SfdxCommand {
 
         if (errorResults.length > 0) {
           errorResults.forEach(({ result: { errors = [] }, record }) =>
-            this.log(messages.getMessage('errorDeployRecordFailed', [JSON.stringify(record), errors.join(', ')]))
+            this.ux.log(messages.getMessage('errorDeployRecordFailed', [JSON.stringify(record), errors.join(', ')]))
           );
           throw new Error(messages.getMessage('errorDeployDataPartiallyFailed', [errorResults.length]));
         } else {
-          this.log(messages.getMessage('infoDeployDataSucceeded', [successResults.length, jobConfig.sObjectApiName]));
+          this.ux.log(
+            messages.getMessage('infoDeployDataSucceeded', [successResults.length, jobConfig.sObjectApiName])
+          );
         }
       } catch (error) {
         if (
@@ -152,14 +154,14 @@ export default class DataDeployDeploy extends SfdxCommand {
         ) {
           throw new SfdxError(messages.getMessage('errorDeployDataFailed', [jobConfig.sObjectApiName, error.message]));
         }
-        this.log(messages.getMessage('infoDeployDataFailed', [jobConfig.sObjectApiName, error.message]));
+        this.ux.log(messages.getMessage('infoDeployDataFailed', [jobConfig.sObjectApiName, error.message]));
       }
     }
 
     if (deploymentResult.jobResults.some(({ failedRecordsCount }) => failedRecordsCount > 0)) {
-      this.log(messages.getMessage('infoDeploymentPartiallyFailed', [deploymentDirectory]));
+      this.ux.log(messages.getMessage('infoDeploymentPartiallyFailed', [deploymentDirectory]));
     } else {
-      this.log(messages.getMessage('infoDeploymentCompleted', [deploymentDirectory]));
+      this.ux.log(messages.getMessage('infoDeploymentCompleted', [deploymentDirectory]));
     }
     return deploymentResult;
   }
