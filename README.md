@@ -204,6 +204,26 @@ sfdx datadeploy:retrieve -d testdata -i IncludedFile1.json,IncludedFile2.json -u
 
 ## Tips and Examples
 
+### Same Set of Fields for Each Record in JSON File
+
+Be careful when crafting JSON files with records by hand. **Each record must have the same set of fields!** If only one record does not contain a field that other records have then this field will be ignored for all records in the file. The order of the fields does not matter.
+
+In the following example the `Type` of the second Account record will not be deployed because the field is missing for the first record.
+
+```json
+[
+  {
+    "AccountId__c": "b7845971-2677-43e0-9316-4909060da942",
+    "Name": "Demo Company 1"
+  },
+  {
+    "AccountId__c": "01898b4a-555b-4010-ab1c-e6e9aeb3f20e",
+    "Name": "Demo Company 2",
+    "Type": "Prospect"
+  }
+]
+```
+
 ### Deploying and Retrieving Lookup Relationships
 
 In the data file use the relationship name followed by the external ID field API name of the related object and provide the other record's external ID value. In the following example for the Contact object the reference to the Account is created by referring to the custom external ID field `AccountId__c` defined on the Account object.
