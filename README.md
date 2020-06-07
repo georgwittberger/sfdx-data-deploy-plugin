@@ -367,6 +367,8 @@ EXAMPLES
 
 # Version History
 
+- Release **2.3.4**
+  - UPDATE: Dependencies updated to most recent versions
 - Release **2.3.3**
   - FIX: #6 Jenkins deployment fails because of json output
 - Release **2.3.2**
