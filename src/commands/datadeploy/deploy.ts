@@ -5,7 +5,7 @@ import { readJsonSync } from 'fs-extra';
 import * as path from 'path';
 import { getAbsolutePath } from '../../modules/datadeploy/config/core';
 import { DeploymentConfig } from '../../modules/datadeploy/config/deployment-config';
-import { createJob, createSingleBatch, getBatchResult } from '../../modules/datadeploy/deploy/core';
+import { closeJob, createJob, createSingleBatch, getBatchResult } from '../../modules/datadeploy/deploy/core';
 
 Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('sfdx-data-deploy-plugin', 'datadeploy-deploy');
@@ -131,6 +131,7 @@ export default class DataDeployDeploy extends SfdxCommand {
         jobResult.operation = operation;
 
         const batchInfo = await createSingleBatch(job, data);
+        await closeJob(job);
         const { successResults, errorResults } = await getBatchResult(connection, batchInfo, data, waitMinutes);
 
         jobResult.deployedRecordsCount = successResults.length;
