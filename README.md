@@ -367,6 +367,8 @@ EXAMPLES
 
 # Version History
 
+- Release **2.3.6**
+  - FIX: #11 Bulk Data Load jobs are not closed after deployment
 - Release **2.3.5**
   - UPDATE: Dependencies updated to most recent versions
 - Release **2.3.4**
