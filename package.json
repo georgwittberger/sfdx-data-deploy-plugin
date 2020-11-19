@@ -1,7 +1,7 @@
 {
   "name": "sfdx-data-deploy-plugin",
   "description": "SFDX plugin to deploy/retrieve data to/from Salesforce",
-  "version": "2.3.6",
+  "version": "2.3.7",
   "license": "MIT",
   "author": "Georg Wittberger <georg.wittberger@gmail.com>",
   "homepage": "https://github.com/georgwittberger/sfdx-data-deploy-plugin",
@@ -18,6 +18,7 @@
   },
   "bugs": "https://github.com/georgwittberger/sfdx-data-deploy-plugin/issues",
   "scripts": {
+    "lint": "tslint --project . --config tslint.json --format stylish",
     "postpack": "rimraf oclif.manifest.json",
     "prepack": "rimraf lib && tsc -b && oclif-dev manifest",
     "update-readme": "oclif-dev readme"
