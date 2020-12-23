@@ -1,3 +1,1 @@
-import getAbsolutePath from './get-absolute-path';
-
-export { getAbsolutePath };
+export * from './deployment-config';

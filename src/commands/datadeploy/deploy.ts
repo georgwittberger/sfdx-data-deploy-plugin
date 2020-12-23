@@ -3,8 +3,7 @@ import { Messages, SfdxError } from '@salesforce/core';
 import * as fs from 'fs';
 import { readJsonSync } from 'fs-extra';
 import * as path from 'path';
-import { getAbsolutePath } from '../../modules/datadeploy/config/core';
-import { DeploymentConfig } from '../../modules/datadeploy/config/deployment-config';
+import { DeploymentConfig } from '../../modules/datadeploy/config/core';
 import { closeJob, createJob, createSingleBatch, getBatchResult } from '../../modules/datadeploy/deploy/core';
 
 Messages.importMessagesDirectory(__dirname);
@@ -55,7 +54,7 @@ export default class DataDeployDeploy extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<DeploymentResult> {
-    const deploymentDirectory = getAbsolutePath(this.flags.deploydir);
+    const deploymentDirectory = path.resolve(this.flags.deploydir);
     this.ux.log(messages.getMessage('infoDeploymentDirectory', [deploymentDirectory]));
 
     const deploymentFile = path.resolve(deploymentDirectory, 'datadeploy.json');

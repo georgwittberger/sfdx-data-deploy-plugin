@@ -2,8 +2,7 @@ import { flags, SfdxCommand, SfdxResult } from '@salesforce/command';
 import { Messages, SfdxError } from '@salesforce/core';
 import { readJsonSync, writeJsonSync } from 'fs-extra';
 import * as path from 'path';
-import { getAbsolutePath } from '../../modules/datadeploy/config/core';
-import { DeploymentConfig } from '../../modules/datadeploy/config/deployment-config';
+import { DeploymentConfig } from '../../modules/datadeploy/config/core';
 import { retrieveData } from '../../modules/datadeploy/retrieve/core';
 
 Messages.importMessagesDirectory(__dirname);
@@ -53,7 +52,7 @@ export default class DataDeployRetrieve extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<RetrievalResult> {
-    const deploymentDirectory = getAbsolutePath(this.flags.deploydir);
+    const deploymentDirectory = path.resolve(this.flags.deploydir);
     this.ux.log(messages.getMessage('infoDeploymentDirectory', [deploymentDirectory]));
 
     const deploymentFile = path.resolve(deploymentDirectory, 'datadeploy.json');
