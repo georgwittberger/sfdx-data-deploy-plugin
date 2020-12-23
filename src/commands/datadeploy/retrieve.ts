@@ -52,7 +52,7 @@ export default class DataDeployRetrieve extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<RetrievalResult> {
-    const deploymentDirectory = path.resolve(this.flags.deploydir);
+    const deploymentDirectory = path.resolve(this.flags.deploydir || '');
     this.ux.log(messages.getMessage('infoDeploymentDirectory', [deploymentDirectory]));
 
     const deploymentFile = path.resolve(deploymentDirectory, 'datadeploy.json');

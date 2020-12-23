@@ -54,7 +54,7 @@ export default class DataDeployDeploy extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<DeploymentResult> {
-    const deploymentDirectory = path.resolve(this.flags.deploydir);
+    const deploymentDirectory = path.resolve(this.flags.deploydir || '');
     this.ux.log(messages.getMessage('infoDeploymentDirectory', [deploymentDirectory]));
 
     const deploymentFile = path.resolve(deploymentDirectory, 'datadeploy.json');
