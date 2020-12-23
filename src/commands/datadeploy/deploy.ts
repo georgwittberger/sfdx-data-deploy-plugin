@@ -3,7 +3,7 @@ import { Messages, SfdxError } from '@salesforce/core';
 import * as fs from 'fs';
 import { readJsonSync } from 'fs-extra';
 import * as path from 'path';
-import { DeploymentConfig } from '../../modules/datadeploy/config/core';
+import { DeploymentConfig, matchesPathInList } from '../../modules/datadeploy/config/core';
 import { closeJob, createJob, createSingleBatch, getBatchResult } from '../../modules/datadeploy/deploy/core';
 
 Messages.importMessagesDirectory(__dirname);
@@ -82,9 +82,14 @@ export default class DataDeployDeploy extends SfdxCommand {
       };
       deploymentResult.jobResults.push(jobResult);
 
+      const dataFile = path.resolve(deploymentDirectory, jobConfig.dataFileName);
       if (
-        (this.flags.include && this.flags.include.length > 0 && !this.flags.include.includes(jobConfig.dataFileName)) ||
-        (this.flags.exclude && this.flags.exclude.length > 0 && this.flags.exclude.includes(jobConfig.dataFileName))
+        (this.flags.include &&
+          this.flags.include.length > 0 &&
+          !matchesPathInList(deploymentDirectory, this.flags.include, dataFile)) ||
+        (this.flags.exclude &&
+          this.flags.exclude.length > 0 &&
+          matchesPathInList(deploymentDirectory, this.flags.exclude, dataFile))
       ) {
         jobResult.operation = 'skipped';
         this.ux.log(messages.getMessage('infoSkippingFile', [jobConfig.dataFileName]));
@@ -92,7 +97,6 @@ export default class DataDeployDeploy extends SfdxCommand {
       }
 
       try {
-        const dataFile = path.resolve(deploymentDirectory, jobConfig.dataFileName);
         if (!fs.existsSync(dataFile)) {
           throw new Error(messages.getMessage('errorDataFileNotFound', [jobConfig.sObjectApiName, dataFile]));
         }

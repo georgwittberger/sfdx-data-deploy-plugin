@@ -2,7 +2,7 @@ import { flags, SfdxCommand, SfdxResult } from '@salesforce/command';
 import { Messages, SfdxError } from '@salesforce/core';
 import { readJsonSync, writeJsonSync } from 'fs-extra';
 import * as path from 'path';
-import { DeploymentConfig } from '../../modules/datadeploy/config/core';
+import { DeploymentConfig, matchesPathInList } from '../../modules/datadeploy/config/core';
 import { retrieveData } from '../../modules/datadeploy/retrieve/core';
 
 Messages.importMessagesDirectory(__dirname);
@@ -71,9 +71,14 @@ export default class DataDeployRetrieve extends SfdxCommand {
     };
 
     for (const jobConfig of deploymentConfig.jobs) {
+      const dataFile = path.resolve(deploymentDirectory, jobConfig.dataFileName);
       if (
-        (this.flags.include && this.flags.include.length > 0 && !this.flags.include.includes(jobConfig.dataFileName)) ||
-        (this.flags.exclude && this.flags.exclude.length > 0 && this.flags.exclude.includes(jobConfig.dataFileName))
+        (this.flags.include &&
+          this.flags.include.length > 0 &&
+          !matchesPathInList(deploymentDirectory, this.flags.include, dataFile)) ||
+        (this.flags.exclude &&
+          this.flags.exclude.length > 0 &&
+          matchesPathInList(deploymentDirectory, this.flags.exclude, dataFile))
       ) {
         this.ux.log(messages.getMessage('infoSkippingFile', [jobConfig.dataFileName]));
         retrievalResult.jobResults.push({
@@ -84,8 +89,6 @@ export default class DataDeployRetrieve extends SfdxCommand {
         });
         continue;
       }
-
-      const dataFile = path.resolve(deploymentDirectory, jobConfig.dataFileName);
 
       try {
         this.ux.log(messages.getMessage('infoRetrievingRecordsToFile', [jobConfig.sObjectApiName, dataFile]));
