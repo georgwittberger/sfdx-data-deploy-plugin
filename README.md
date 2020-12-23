@@ -177,7 +177,7 @@ The plugin requires a connection to a Salesforce org in order to deploy records 
 
 TIP: If the deployment descriptor is in the current working directory you can omit the `-d` flag.
 
-The plugin runs the deployment for all jobs defined the deployment descriptor by default. Use the command line options `-i` or `-x` followed by a comma-separated list of data file names to specify which jobs to include or exclude from deployment. The given file names are matched against the `dataFileName` properties in the job configurations.
+The plugin runs the deployment for all jobs defined the deployment descriptor by default. Use the command line options `-i` or `-x` followed by a comma-separated list of data file paths to specify which jobs to include or exclude from deployment. The file paths are resolved inside the deployment directory.
 
 ```bash
 sfdx datadeploy:deploy -d testdata -i IncludedFile1.json,IncludedFile2.json -u yourname@yourorg.com
@@ -196,7 +196,7 @@ The plugin requires a connection to a Salesforce org in order to retrieve record
 
 TIP: If the deployment descriptor is in the current working directory you can omit the `-d` flag.
 
-The plugin runs the retrieval for all jobs defined the deployment descriptor by default. Use the command line options `-i` or `-x` followed by a comma-separated list of data file names to specify which jobs to include or exclude from retrieval. The given file names are matched against the `dataFileName` properties in the job configurations.
+The plugin runs the retrieval for all jobs defined the deployment descriptor by default. Use the command line options `-i` or `-x` followed by a comma-separated list of data file paths to specify which jobs to include or exclude from retrieval. The file paths are resolved inside the deployment directory.
 
 ```bash
 sfdx datadeploy:retrieve -d testdata -i IncludedFile1.json,IncludedFile2.json -u yourname@yourorg.com
@@ -294,9 +294,9 @@ Records with existing relations in the target org will still have their relation
 
 ## `sfdx datadeploy:deploy [-d <directory>] [-i <array>] [-x <array>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
+```
 Deploy records from data files to Salesforce
 
-```
 USAGE
   $ sfdx datadeploy:deploy [-d <directory>] [-i <array>] [-x <array>] [-u <string>] [--apiversion <string>] [--json]
   [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
@@ -306,13 +306,14 @@ OPTIONS
                                                                                     descriptor 'datadeploy.json'
                                                                                     (default: current working directory)
 
-  -i, --include=include                                                             Include only the given list of file
-                                                                                    names
+  -i, --include=include                                                             Include only the given list of data
+                                                                                    files (default: all)
 
   -u, --targetusername=targetusername                                               username or alias for the target
                                                                                     org; overrides default target org
 
-  -x, --exclude=exclude                                                             Exclude the given list of file names
+  -x, --exclude=exclude                                                             Exclude the given list of data files
+                                                                                    (default: none)
 
   --apiversion=apiversion                                                           override the api version used for
                                                                                     api requests made by this command
@@ -329,9 +330,9 @@ EXAMPLES
 
 ## `sfdx datadeploy:retrieve [-d <directory>] [-i <array>] [-x <array>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
+```
 Retrieve records from Salesforce to data files
 
-```
 USAGE
   $ sfdx datadeploy:retrieve [-d <directory>] [-i <array>] [-x <array>] [-u <string>] [--apiversion <string>] [--json]
   [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
@@ -341,13 +342,14 @@ OPTIONS
                                                                                     descriptor 'datadeploy.json'
                                                                                     (default: current working directory)
 
-  -i, --include=include                                                             Include only the given list of file
-                                                                                    names
+  -i, --include=include                                                             Include only the given list of data
+                                                                                    files (default: all)
 
   -u, --targetusername=targetusername                                               username or alias for the target
                                                                                     org; overrides default target org
 
-  -x, --exclude=exclude                                                             Exclude the given list of file names
+  -x, --exclude=exclude                                                             Exclude the given list of data files
+                                                                                    (default: none)
 
   --apiversion=apiversion                                                           override the api version used for
                                                                                     api requests made by this command
@@ -367,6 +369,10 @@ EXAMPLES
 
 # Version History
 
+- Release **2.4.0**
+  - NEW: Command line options `--include` and `--exclude` support real paths relative to deployment directory
+  - UPDATE: Log messages no longer use emoji but text prefixes
+  - UPDATE: Dependencies updated to most recent versions
 - Release **2.3.7**
   - UPDATE: Dependencies updated to most recent versions
 - Release **2.3.6**

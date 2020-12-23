@@ -1,8 +1,8 @@
 {
   "commandDescription": "Deploy records from data files to Salesforce",
   "deploydirFlagDescription": "Directory containing the deployment descriptor 'datadeploy.json' (default: current working directory)",
-  "includeFlagDescription": "Include only the given list of file names",
-  "excludeFlagDescription": "Exclude the given list of file names",
+  "includeFlagDescription": "Include only the given list of data files (default: all)",
+  "excludeFlagDescription": "Exclude the given list of data files (default: none)",
   "infoDeploymentDirectory": "INFO: Deploying data from directory: %s",
   "infoDeploymentFile": "INFO: Using deployment descriptor: %s",
   "infoSkippingFile": "INFO: Skipping job for file '%s'",
