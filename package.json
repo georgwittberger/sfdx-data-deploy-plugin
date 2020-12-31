@@ -1,7 +1,7 @@
 {
   "name": "sfdx-data-deploy-plugin",
   "description": "SFDX plugin to deploy/retrieve data to/from Salesforce",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "license": "MIT",
   "author": "Georg Wittberger <georg.wittberger@gmail.com>",
   "homepage": "https://github.com/georgwittberger/sfdx-data-deploy-plugin",

@@ -12,6 +12,8 @@ This [Salesforce CLI](https://developer.salesforce.com/tools/sfdxcli) plugin can
 - Maintaining test data as source files in a Git repository
 - Rolling out configuration records as part of deployments
 
+TIP: Enhance your developer experience with the corresponding [Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=georgwittberger.sfdx-data-deploy-vscode).
+
 ---
 
 <!-- toc -->
@@ -369,6 +371,8 @@ EXAMPLES
 
 # Version History
 
+- Release **2.4.1**
+  - UPDATE: Mention Visual Studio Code extension in README file
 - Release **2.4.0**
   - NEW: Command line options `--include` and `--exclude` support real paths relative to deployment directory
   - UPDATE: Log messages no longer use emoji but text prefixes
