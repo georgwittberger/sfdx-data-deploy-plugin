@@ -371,6 +371,8 @@ EXAMPLES
 
 # Version History
 
+- Release **2.4.2**
+  - UPDATE: Dependencies updated to most recent versions
 - Release **2.4.1**
   - UPDATE: Mention Visual Studio Code extension in README file
 - Release **2.4.0**
