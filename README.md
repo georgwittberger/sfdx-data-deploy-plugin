@@ -371,6 +371,8 @@ EXAMPLES
 
 # Version History
 
+- Release **2.4.3**
+  - UPDATE: Dependencies updated to most recent versions
 - Release **2.4.2**
   - UPDATE: Dependencies updated to most recent versions
 - Release **2.4.1**
