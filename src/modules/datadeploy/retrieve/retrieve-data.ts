@@ -18,18 +18,14 @@ export default function retrieveData(connection: Connection, config: JobConfig):
   return new Promise<unknown[]>((resolve, reject) => {
     const query = connection
       .sobject(config.sObjectApiName)
-      .select(
-        config.retrieveConfig && config.retrieveConfig.includeFieldApiNames
-          ? config.retrieveConfig.includeFieldApiNames
-          : ['*']
-      );
-    if (config.retrieveConfig && config.retrieveConfig.filterCriteria) {
+      .select(config.retrieveConfig?.includeFieldApiNames || ['*']);
+    if (config.retrieveConfig?.filterCriteria) {
       query.where(config.retrieveConfig.filterCriteria);
     }
-    if (config.retrieveConfig && config.retrieveConfig.sortFieldApiNames) {
+    if (config.retrieveConfig?.sortFieldApiNames) {
       query.sort(config.retrieveConfig.sortFieldApiNames.join(' '));
     }
-    if (config.retrieveConfig && config.retrieveConfig.maxRecordCount) {
+    if (config.retrieveConfig?.maxRecordCount) {
       query.limit(config.retrieveConfig.maxRecordCount);
     }
     query.execute({ autoFetch: true }, (error: Error, records: unknown[]) => {
@@ -38,13 +34,18 @@ export default function retrieveData(connection: Connection, config: JobConfig):
       } else {
         records.forEach(record => {
           deleteMetaAttributes(record);
-          deleteSystemFields(record);
+          if (
+            typeof config.retrieveConfig?.excludeSystemFields === 'undefined' ||
+            config.retrieveConfig?.excludeSystemFields
+          ) {
+            deleteSystemFields(record);
+          }
           flattenNestedObjects(record);
           transformRelationships(record);
           if (config.sObjectApiName.toLowerCase() === 'contact') {
             transformContactAccountRelationship(record);
           }
-          if (config.retrieveConfig && config.retrieveConfig.excludeFieldApiNames) {
+          if (config.retrieveConfig?.excludeFieldApiNames) {
             deleteExcludedFields(record, config.retrieveConfig.excludeFieldApiNames);
           }
         });

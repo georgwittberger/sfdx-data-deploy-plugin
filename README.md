@@ -106,13 +106,14 @@ Data is deployed using the [Salesforce Bulk API](https://developer.salesforce.co
 
 For retrieval of records from Salesforce to the data file there are some further configuration properties which can be declared as an object in the `retrieveConfig` property of the job configuration. The retrieval properties are described in the following table.
 
-| Property               | Type     | Description                                                                                                                             |
-| ---------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `includeFieldApiNames` | string[] | _(optional)_ API names of fields to retrieve for the Salesforce object. If not present, defaults to all fields excluding system fields. |
-| `excludeFieldApiNames` | string[] | _(optional)_ API names of fields to exclude when retrieving all fields.                                                                 |
-| `filterCriteria`       | object   | _(optional)_ Criteria to select specific records to retrieve. See filtering explanation below. If not present, retrieves all records.   |
-| `sortFieldApiNames`    | string[] | _(optional)_ API names of fields to sort the records. See sorting explanation below.                                                    |
-| `maxRecordCount`       | number   | _(optional)_ Maximum number of records to retrieve. If not present, maximum is 10,000 records.                                          |
+| Property               | Type     | Description                                                                                                         |
+| ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------------- |
+| `includeFieldApiNames` | string[] | _(optional)_ API names of fields to retrieve for the Salesforce object. Default: all fields                         |
+| `excludeFieldApiNames` | string[] | _(optional)_ API names of fields to exclude when retrieving all fields.                                             |
+| `excludeSystemFields`  | boolean  | _(optional)_ Exclude system fields like `Id`, `OwnerId`, etc. from retrieved data. Default: `true`                  |
+| `filterCriteria`       | object   | _(optional)_ Criteria to select specific records to retrieve. See filtering explanation below. Default: all records |
+| `sortFieldApiNames`    | string[] | _(optional)_ API names of fields to sort the records. See sorting explanation below.                                |
+| `maxRecordCount`       | number   | _(optional)_ Maximum number of records to retrieve. Default: `10000`                                                |
 
 The following example shows a retrieval job configuration for the Account object, assuming there is the custom field `AccountId__c`. It retrieves only records where the `Name` begins with "Demo ", fetches only the `Name` and `AccountId__c` fields and sorts the results by `Name` in ascending order.
 
@@ -371,6 +372,8 @@ EXAMPLES
 
 # Version History
 
+- Release **2.5.0**
+  - NEW: Job retrieval configuration option `excludeSystemFields`
 - Release **2.4.5**
   - UPDATE: Dependencies updated to most recent versions
 - Release **2.4.4**
