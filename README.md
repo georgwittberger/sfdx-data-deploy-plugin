@@ -372,6 +372,8 @@ EXAMPLES
 
 # Version History
 
+- Release **2.5.1**
+  - UPDATE: Dependencies updated to most recent versions
 - Release **2.5.0**
   - NEW: Job retrieval configuration option `excludeSystemFields`
 - Release **2.4.5**
