@@ -372,6 +372,8 @@ EXAMPLES
 
 # Version History
 
+- Release **2.5.3**
+  - UPDATE: Upgraded dependencies due to security vulnerabilities
 - Release **2.5.2**
   - UPDATE: Dependencies updated to most recent versions
 - Release **2.5.1**
